@@ -89,3 +89,28 @@ ng build --configuration production
 ```bash
 ng serve --proxy-config proxy.conf.json
 ```
+
+## Consume this project
+
+##### Clone sources to a local folder
+```bash
+git clone https://gitlab.com/mariusz.jarocki/pws2025.git
+```
+
+##### Install dependecies for both frontend and backend
+```bash
+npm install
+npm --prefix frontend install
+```
+##### Run both parts of Webapp using development servers
+```bash
+npm run dev
+```
+and using another terminal
+```bash
+cd frontend
+npm run dev
+```
+
+##### Enjoy the working Webapp in your browser! :)
+http://localhost:4200
