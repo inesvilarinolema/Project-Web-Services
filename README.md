@@ -66,6 +66,7 @@ Modify file `package.json` by adding some new scripts. After `npm init` the only
 ```bash
 npm install -g @angular/cli@20
 ```
+NOTE: on Mac or Linux, it may require preceding this command by `sudo`.
 
 ##### Create frontend folder, download demo sources and transpile them to production version.
 ```bash
