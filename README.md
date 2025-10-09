@@ -70,7 +70,7 @@ NOTE: on Mac or Linux, it may require preceding this command by `sudo`.
 
 ##### Create frontend folder, download demo sources and transpile them to production version.
 ```bash
-npx @angular/cli new frontend --routing --style=scss --defaults
+ng new frontend --routing --style=scss --defaults
 cd frontend
 ng build --configuration production
 ```
@@ -89,6 +89,8 @@ ng build --configuration production
 ```bash
 ng serve --proxy-config proxy.conf.json
 ```
+
+NOTE: `ng` automatically creates `package.json` with corresponding `ng`-commands to build and run frontends.
 
 ## Consume this project
 
