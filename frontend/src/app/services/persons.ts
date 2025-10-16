@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 import { Person } from '../models/person';
 
@@ -9,6 +9,11 @@ import { Person } from '../models/person';
 })
 export class PersonsService {
   private apiUrl = '/api/persons';
+  
+  // Subject to notify components to reload the persons list
+  private reloadSubject = new BehaviorSubject<void>(undefined);
+  // Observable that components can subscribe to
+  reload$ = this.reloadSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
@@ -18,5 +23,10 @@ export class PersonsService {
 
   newPerson(person: Person): Observable<Person> {
     return this.http.post<Person>(this.apiUrl, person);
+  }
+
+  // Method to notify subscribers to reload the persons list
+  notifyReload() {
+    this.reloadSubject.next();
   }
 }

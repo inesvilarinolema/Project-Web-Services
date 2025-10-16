@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { MatTableModule } from '@angular/material/table';
-import { Observable } from 'rxjs';
+import { Subscription } from 'rxjs';
 
 import { Person } from '../models/person'
 import { PersonsService } from '../services/persons';
@@ -15,11 +15,24 @@ import { PersonsService } from '../services/persons';
 })
 export class PersonsTableComponent {
   displayedColumns: string[] = ['id', 'name'];
-  persons$!: Observable<Person[]>;
+  persons: Person[] = [];
+  private sub?: Subscription;
 
   constructor(private personsService: PersonsService) {}
 
-  ngOnInit(): void {
-    this.persons$ = this.personsService.getPersons();
+  ngOnInit() {
+    this.loadData();
+    this.sub = this.personsService.reload$.subscribe(() => this.loadData());
+  }
+
+  loadData() {
+    this.personsService.getPersons().subscribe({
+      next: (data) => (this.persons = data),
+      error: (err) => console.error(err),
+    });
+  }
+
+  ngOnDestroy() {
+    this.sub?.unsubscribe();
   }
 }
