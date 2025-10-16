@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { PersonsTableComponent } from './components/persons-table';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [PersonsTableComponent],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
+  standalone: true
 })
 export class App {
-  protected title = 'frontend';
+  protected title = 'PWS 2025';
 }

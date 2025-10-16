@@ -1,0 +1,10 @@
+.full-width-table {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.mat-row:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+}
