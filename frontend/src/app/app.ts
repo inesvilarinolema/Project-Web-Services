@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
 import { PersonsTableComponent } from './components/persons-table';
+import { PersonFormComponent } from './components/person-form';
 
 @Component({
   selector: 'app-root',
-  imports: [PersonsTableComponent],
+  imports: [PersonsTableComponent, PersonFormComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   standalone: true

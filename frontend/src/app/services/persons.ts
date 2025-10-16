@@ -15,4 +15,8 @@ export class PersonsService {
   getPersons(): Observable<Person[]> {
     return this.http.get<Person[]>(this.apiUrl);
   }
+
+  newPerson(person: Person): Observable<Person> {
+    return this.http.post<Person>(this.apiUrl, person);
+  }
 }
