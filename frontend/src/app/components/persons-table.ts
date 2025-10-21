@@ -5,6 +5,8 @@ import { Subscription } from 'rxjs';
 
 import { Person } from '../models/person'
 import { PersonsService } from '../services/persons';
+import { EditPersonDialog } from '../dialogs/edit-person';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-persons-table',
@@ -18,7 +20,7 @@ export class PersonsTableComponent {
   persons: Person[] = [];
   private sub?: Subscription;
 
-  constructor(private personsService: PersonsService) {}
+  constructor(private personsService: PersonsService, private dialog: MatDialog) {}
 
   ngOnInit() {
     this.loadData();
@@ -29,6 +31,13 @@ export class PersonsTableComponent {
     this.personsService.getPersons().subscribe({
       next: (data) => (this.persons = data),
       error: (err) => console.error(err),
+    });
+  }
+
+  openDialog(row: Person | null) {
+      const dialogRef = this.dialog.open(EditPersonDialog, {
+        width: '75%',
+        data: { row }
     });
   }
 

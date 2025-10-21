@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
@@ -17,11 +17,18 @@ import { PersonsService } from '../services/persons';
   standalone: true
 })
 export class PersonFormComponent {
+  @Input() row!: Person;
   person$!: Observable<Person>;
   name: string = '';
 
   constructor(private personsService: PersonsService) {}
 
+  ngOnInit(): void {
+    if (this.row) {
+      this.name = this.row.name;
+    }
+  }
+  
   onSubmit(name: string): void {
     const newPerson: Person = { id: 0, name }; // id will be set by the server
     this.personsService.newPerson(newPerson).subscribe(person => {
