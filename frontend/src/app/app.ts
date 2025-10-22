@@ -1,14 +1,13 @@
 import { Component } from '@angular/core';
-import { PersonsTableComponent } from './components/persons-table';
-import { PersonFormComponent } from './components/person-form';
+import { MainPage } from './pages/main'
 
 @Component({
   selector: 'app-root',
-  imports: [PersonsTableComponent, PersonFormComponent],
+  imports: [MainPage],
   templateUrl: './app.html',
-  styleUrl: './app.scss',
+  styleUrls: ['./app.scss'],
   standalone: true
 })
 export class App {
-  protected title = 'PWS 2025';
+  // nothing for now
 }

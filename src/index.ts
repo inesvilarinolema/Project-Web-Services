@@ -51,6 +51,19 @@ app.post('/api/persons', async (req: Request, res: Response) => {
   }
 });
 
+app.put('/api/persons', async (req: Request, res: Response) => {
+  const { id, name } = req.body;
+  const index = persons.findIndex(p => p.id === id);
+  if (index !== -1) { // person found
+    const updatedPerson = new Person(name);
+    updatedPerson.id = id;
+    persons[index] = updatedPerson;
+    res.json(updatedPerson); // return the updated person
+  } else {
+    res.status(404).json({ message: 'Person to update not found' });
+  }
+});
+
 app.delete('/api/persons/:id', async (req: Request, res: Response) => {
   const id = parseInt(req.params.id, 10);
   const index = persons.findIndex(p => p.id === id);

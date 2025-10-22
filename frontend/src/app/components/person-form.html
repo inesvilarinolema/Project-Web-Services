@@ -1,25 +1,19 @@
-<mat-card class="add-person-card">
-    <mat-card-content>
-    <form (ngSubmit)="onSubmit(name)" #form="ngForm" class="form-container">
-        <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Name</mat-label>
-        <input
-            matInput
-            [(ngModel)]="name"
-            name="name"
-            placeholder="Enter name"
-            required
-        />
-        </mat-form-field>
+<form [formGroup]="form">
 
-        <button
-        mat-raised-button
-        color="success"
-        type="submit"
-        [disabled]="!form.valid"
-        >
-        Add Person
-        </button>
-    </form>
-    </mat-card-content>
-</mat-card>
+    <mat-card>
+        <mat-card-content class="form-container">
+
+            <mat-form-field appearance="outline" class="w-full">
+
+                <mat-label>Name</mat-label>
+                <input matInput formControlName="name" placeholder="Enter name" required/>
+
+                @if(form.get('name')?.invalid) {
+                    <mat-error>Name is required</mat-error>
+                }
+            </mat-form-field>
+
+        </mat-card-content>
+    </mat-card>
+
+</form>

@@ -25,6 +25,10 @@ export class PersonsService {
     return this.http.post<Person>(this.apiUrl, person);
   }
 
+  modifyPerson(person: Person): Observable<Person> {
+    return this.http.put<Person>(this.apiUrl, person);
+  }
+
   // Method to notify subscribers to reload the persons list
   notifyReload() {
     this.reloadSubject.next();

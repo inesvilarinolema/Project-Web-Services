@@ -9,7 +9,7 @@ import { EditPersonDialog } from '../dialogs/edit-person';
 import { MatDialog } from '@angular/material/dialog';
 
 @Component({
-  selector: 'app-persons-table',
+  selector: 'persons-table',
   templateUrl: './persons-table.html',
   styleUrls: ['./persons-table.scss'],
   imports: [CommonModule, MatTableModule],
