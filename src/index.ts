@@ -1,6 +1,8 @@
 import express, { Request, Response } from 'express';
 import path from 'path';
 import morgan from 'morgan';
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
 
 const app = express();
 
@@ -13,6 +15,19 @@ app.use(express.static(angularDistPath));
 
 // automatic parsing of json payloads
 app.use(express.json());
+
+// open sqlite database and create tables if they do not exist
+async function openDb() {
+  const db = await open({
+    filename: './data.sqlite3',
+    driver: sqlite3.Database
+  });
+  await db.run(`
+    CREATE TABLE IF NOT EXISTS persons
+      (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)
+    `);
+  return db;
+}
 
 // schema for a person
 class Person {
@@ -76,6 +91,9 @@ app.delete('/api/persons/:id', async (req: Request, res: Response) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
-});
+openDb().then(connection => {
+    app.listen(3000, () => {
+      console.log('Server is running on port 3000');
+    });
+  }
+)
