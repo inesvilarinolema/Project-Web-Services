@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import path from 'path';
 import morgan from 'morgan';
 import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import { open, Database } from 'sqlite';
 
 const app = express();
 
@@ -17,16 +17,28 @@ app.use(express.static(angularDistPath));
 app.use(express.json());
 
 // open sqlite database and create tables if they do not exist
-async function openDb() {
-  const db = await open({
+
+let db: Database | null = null;
+
+async function openDb(): Promise<Database> {
+  return open({
     filename: './data.sqlite3',
     driver: sqlite3.Database
   });
-  await db.run(`
+}
+
+async function createSchemaAndData(): Promise<void> {
+  // Create a structure
+  await db!.run(`
     CREATE TABLE IF NOT EXISTS persons
       (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)
     `);
-  return db;
+  // Check if the table is empty
+  const row = await db!.get<{ count: number }>('SELECT COUNT(*) AS count FROM persons');
+  if (row && row.count === 0) {
+    // Insert three sample records if empty
+    await db!.run(`INSERT INTO persons (name) VALUES (?), (?), (?)`, 'Alice', 'Bob', 'Charlie');
+  }
 }
 
 // schema for a person
@@ -91,9 +103,12 @@ app.delete('/api/persons/:id', async (req: Request, res: Response) => {
   }
 });
 
-openDb().then(connection => {
-    app.listen(3000, () => {
-      console.log('Server is running on port 3000');
-    });
+openDb().then(_db => {
+  console.log('Database connected');
+  db = _db;
+  createSchemaAndData();
+  app.listen(3000, () => {
+    console.log('Server is running on port 3000');
+  });
   }
 )
