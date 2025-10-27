@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import path from 'path';
 import morgan from 'morgan';
 import sqlite3 from 'sqlite3';
@@ -16,6 +16,56 @@ app.use(express.static(angularDistPath));
 // automatic parsing of json payloads
 app.use(express.json());
 
+// new Error class
+export class HttpError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+    // set the prototype explicitly, required for extending built-in classes
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+// common error handler returns json with appropriate message
+export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction): void {
+    const status = (err as any)?.status || 500;
+    const message = (err as any)?.message || "Internal Server Error";
+    console.error('ERROR!', message);
+    res.status(status).json({ message });
+}
+
+// schema for a person
+class Person {
+  private static seq = 4; // starting id for new persons
+  id: number;
+  firstname: string;
+  lastname: string;
+  birthdate: Date;
+
+  constructor(firstname: string, lastname: string, birthdate: Date) {
+    if (!firstname || typeof firstname !== 'string' || firstname.trim().length === 0)
+      throw new HttpError(400, 'First name was not provided correctly');
+    if( !lastname || typeof lastname !== 'string' || lastname.trim().length === 0)
+      throw new HttpError(400, 'Last name was not provided correctly');
+    if( !birthdate || !(birthdate instanceof Date) || isNaN(birthdate.getTime()) || birthdate < new Date('1900-01-01') || birthdate >= new Date())
+      throw new HttpError(400, 'Birth date was not provided correctly');
+
+    this.id = Person.seq++; // auto-increment id
+    this.firstname = firstname;
+    this.lastname = lastname;
+    this.birthdate = birthdate;
+  }
+}
+
+// in-memory "database"
+const persons: Person[] = [
+  { id: 1, firstname: 'Alice', lastname: 'Adams', birthdate: new Date('1999-03-24') },
+  { id: 2, firstname: 'Bobby', lastname: 'Brown', birthdate: new Date('1996-08-20') },
+  { id: 3, firstname: 'Cecille', lastname: 'Cronfield', birthdate: new Date('1991-11-02') }
+];
+
 // open sqlite database and create tables if they do not exist
 
 let db: Database | null = null;
@@ -27,40 +77,23 @@ async function openDb(): Promise<Database> {
   });
 }
 
-async function createSchemaAndData(): Promise<void> {
+async function createSchemaAndData() {
   // Create a structure
   await db!.run(`
     CREATE TABLE IF NOT EXISTS persons
-      (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)
+      (id INTEGER PRIMARY KEY AUTOINCREMENT, firstname TEXT, lastname TEXT, birthdate DATE)
     `);
   // Check if the table is empty
   const row = await db!.get<{ count: number }>('SELECT COUNT(*) AS count FROM persons');
   if (row && row.count === 0) {
-    // Insert three sample records if empty
-    await db!.run(`INSERT INTO persons (name) VALUES (?), (?), (?)`, 'Alice', 'Bob', 'Charlie');
-  }
-}
-
-// schema for a person
-class Person {
-  private static seq = 3; // starting id for new persons
-  id: number;
-  name: string;
-
-  constructor(name: string) {
-    if (!name || typeof name !== 'string' || name.trim().length === 0) { // basic validation
-      throw new Error('Name is required');
+    // Insert sample records from persons array if empty
+    for(const person of persons) {
+      await db!.run('INSERT INTO persons (id, firstname, lastname, birthdate) VALUES (?, ?, ?, ?)',
+        person.id, person.firstname, person.lastname, person.birthdate
+      );
     }
-    this.id = Person.seq++; // auto-increment id
-    this.name = name;
   }
 }
-
-// in-memory "database"
-const persons: Person[] = [
-  { id: 1, name: 'Alice' },
-  { id: 2, name: 'Bob' }
-];
 
 // persons endpoints
 app.get('/api/persons', async (req: Request, res: Response) => {
@@ -68,9 +101,9 @@ app.get('/api/persons', async (req: Request, res: Response) => {
 });
 
 app.post('/api/persons', async (req: Request, res: Response) => {
-  const { name } = req.body; // assume body has correct shape so name is present
+  const { firstname, lastname, birthdate } = req.body; // assume body has correct shape so name is present
   try {
-    const newPerson = new Person(name);
+    const newPerson = new Person(firstname, lastname, new Date(birthdate));
     persons.push(newPerson);
     res.json(newPerson); // return the newly created person; alternatively, you may return the full list of persons
   } catch (error: Error | any) {
@@ -79,10 +112,10 @@ app.post('/api/persons', async (req: Request, res: Response) => {
 });
 
 app.put('/api/persons', async (req: Request, res: Response) => {
-  const { id, name } = req.body;
+  const { id, firstname, lastname, birthdate } = req.body;
   const index = persons.findIndex(p => p.id === id);
   if (index !== -1) { // person found
-    const updatedPerson = new Person(name);
+    const updatedPerson = new Person(firstname, lastname, new Date(birthdate));
     updatedPerson.id = id;
     persons[index] = updatedPerson;
     res.json(updatedPerson); // return the updated person
@@ -103,12 +136,19 @@ app.delete('/api/persons/:id', async (req: Request, res: Response) => {
   }
 });
 
-openDb().then(_db => {
+async function main() {
+  db = await openDb();
   console.log('Database connected');
-  db = _db;
-  createSchemaAndData();
+  await createSchemaAndData();
+
+  // install our error handler
+  app.use(errorHandler);
+
   app.listen(3000, () => {
     console.log('Server is running on port 3000');
   });
-  }
-)
+}
+
+main().catch(err => {
+  console.error('Startup failed');
+})

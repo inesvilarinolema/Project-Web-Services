@@ -33,7 +33,7 @@ export class EditPersonDialog {
                     this.personsService.notifyReload(); // notify other components to reload the list
                 },
                 error: err => {
-                    this.snackBar.open(err.message, 'Close', {
+                    this.snackBar.open(err?.error?.message ?? err?.message ?? 'Unknown error', 'Close', {
                         duration: 5000,
                         panelClass: ['snackbar-error']
                     });
@@ -56,7 +56,7 @@ export class EditPersonDialog {
                     });
                 },
                 error: err => {
-                    this.snackBar.open(err.message, 'Close', {
+                    this.snackBar.open(err?.error?.message ?? err?.message ?? 'Unknown error', 'Close', {
                         duration: 5000,
                         panelClass: ['snackbar-error']
                     });
