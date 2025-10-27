@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 
 import { Person } from '../models/person'
 
@@ -11,7 +12,7 @@ import { Person } from '../models/person'
   selector: 'person-form',
   templateUrl: './person-form.html',
   styleUrls: ['./person-form.scss'],
-  imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatInputModule, MatButtonModule],
+  imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatInputModule, MatButtonModule, MatDatepickerModule],
   standalone: true
 })
 export class PersonFormComponent {
@@ -22,7 +23,9 @@ export class PersonFormComponent {
 
   constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
-      name: ['', Validators.required]
+      firstname: ['', Validators.required],
+      lastname: ['', Validators.required],
+      birthdate: [null, Validators.required]
     });
 
     this.form.statusChanges.subscribe(() => {
