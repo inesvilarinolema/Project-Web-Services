@@ -29,6 +29,10 @@ export class PersonsService {
     return this.http.put<Person>(this.apiUrl, person);
   }
 
+  deletePerson(id: number): Observable<Person> {
+    return this.http.delete<Person>(this.apiUrl + '/' + id);
+  }
+
   // Method to notify subscribers to reload the persons list
   notifyReload() {
     this.reloadSubject.next();

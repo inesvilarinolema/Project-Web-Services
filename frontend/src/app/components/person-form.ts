@@ -36,6 +36,9 @@ export class PersonFormComponent {
   ngOnChanges(changes: SimpleChanges) {
     if (changes['row'] && this.row) {
       this.form.patchValue(this.row);
+      this.form.patchValue({
+        birthdate: new Date(this.row.birthdate)
+      });
       this.validChange.emit(this.form.valid);
     }
   }

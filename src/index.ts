@@ -97,6 +97,7 @@ async function createSchemaAndData() {
 
 // persons endpoints
 app.get('/api/persons', async (req: Request, res: Response) => {
+  const persons = await db?.all('SELECT * FROM persons');
   res.json(persons);
 });
 
@@ -104,7 +105,9 @@ app.post('/api/persons', async (req: Request, res: Response) => {
   const { firstname, lastname, birthdate } = req.body; // assume body has correct shape so name is present
   try {
     const newPerson = new Person(firstname, lastname, new Date(birthdate));
-    persons.push(newPerson);
+    db?.run('INSERT INTO persons (firstname, lastname, birthdate) VALUES (?, ?, ?)',
+      newPerson.firstname, newPerson.lastname, newPerson.birthdate
+    );
     res.json(newPerson); // return the newly created person; alternatively, you may return the full list of persons
   } catch (error: Error | any) {
     res.status(400).json({ message: error.message }); // bad request due to validation error
@@ -113,24 +116,35 @@ app.post('/api/persons', async (req: Request, res: Response) => {
 
 app.put('/api/persons', async (req: Request, res: Response) => {
   const { id, firstname, lastname, birthdate } = req.body;
-  const index = persons.findIndex(p => p.id === id);
-  if (index !== -1) { // person found
+  try {
+    if (typeof id !== 'number' || id <= 0) {
+      throw new HttpError(400, 'ID was not provided correctly');
+    }
     const updatedPerson = new Person(firstname, lastname, new Date(birthdate));
-    updatedPerson.id = id;
-    persons[index] = updatedPerson;
-    res.json(updatedPerson); // return the updated person
-  } else {
-    res.status(404).json({ message: 'Person to update not found' });
+    updatedPerson.id = id;  // retain the original id
+    const result = await db?.run('UPDATE persons SET firstname = ?, lastname = ?, birthdate = ? WHERE id = ?',
+      updatedPerson.firstname, updatedPerson.lastname, updatedPerson.birthdate, updatedPerson.id
+    );
+    if (result && result.changes && result.changes > 0) {
+      res.json(updatedPerson); // return the updated person
+    } else {
+      throw new HttpError(404, 'Person to update not found');
+    }
+  } catch (error: Error | any) {
+    const status = (error as any)?.status || 400;
+    res.status(status).json({ message: error.message });
   }
 });
 
 app.delete('/api/persons/:id', async (req: Request, res: Response) => {
   const id = parseInt(req.params.id, 10);
-  const index = persons.findIndex(p => p.id === id);
-  if (index !== -1) { // person found
-    const deletedPerson = persons[index];
-    persons.splice(index, 1);
-    res.json(deletedPerson); // return the deleted person
+  if (isNaN(id) || id <= 0) {
+    res.status(400).json({ message: 'ID was not provided correctly' });
+    return;
+  }
+  const result = await db?.run('DELETE FROM persons WHERE id = ?', id);
+  if (result && result.changes && result.changes > 0) {
+    res.json({ message: 'Person deleted successfully' });
   } else {
     res.status(404).json({ message: 'Person to delete not found' });
   }

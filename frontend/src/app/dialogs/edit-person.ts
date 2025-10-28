@@ -66,6 +66,25 @@ export class EditPersonDialog {
         }
     }
 
+    onDelete() {
+        this.personsService.deletePerson(this.data.row.id).subscribe({
+            next: person => {
+                this.personsService.notifyReload(); // notify other components to reload the list
+                this.snackBar.open(`Person ${person.id} deleted`, 'Close', {
+                    duration: 5000,
+                    panelClass: ['snackbar-success']
+                });
+            },
+            error: err => {
+                this.snackBar.open(err?.error?.message ?? err?.message ?? 'Unknown error', 'Close', {
+                    duration: 5000,
+                    panelClass: ['snackbar-error']
+                });
+            }
+        });
+        this.dialogRef.close();
+    }
+
     onFormValidChange(valid: boolean) {
         this.formValid = valid;
     }
