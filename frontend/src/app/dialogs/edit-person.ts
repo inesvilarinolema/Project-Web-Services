@@ -1,4 +1,4 @@
-import { Component, Inject, Sanitizer, ViewChild } from '@angular/core';
+import { Component, Inject, ViewChild } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { PersonFormComponent } from '../components/person-form';
@@ -31,6 +31,10 @@ export class EditPersonDialog {
             this.personsService.newPerson(newPerson).subscribe({
                 next: person => {
                     this.personsService.notifyReload(); // notify other components to reload the list
+                    this.snackBar.open(`Person ${person.id} added`, 'Close', {
+                        duration: 5000,
+                        panelClass: ['snackbar-success']
+                    });
                 },
                 error: err => {
                     this.snackBar.open(err?.error?.message ?? err?.message ?? 'Unknown error', 'Close', {

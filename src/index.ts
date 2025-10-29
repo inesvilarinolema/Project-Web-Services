@@ -38,7 +38,6 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
 
 // schema for a person
 class Person {
-  private static seq = 4; // starting id for new persons
   id: number;
   firstname: string;
   lastname: string;
@@ -52,15 +51,15 @@ class Person {
     if( !birthdate || !(birthdate instanceof Date) || isNaN(birthdate.getTime()) || birthdate < new Date('1900-01-01') || birthdate >= new Date())
       throw new HttpError(400, 'Birth date was not provided correctly');
 
-    this.id = Person.seq++; // auto-increment id
+    this.id = 0; // will be set by the database AUTOINCREMENT
     this.firstname = firstname;
     this.lastname = lastname;
     this.birthdate = birthdate;
   }
 }
 
-// in-memory "database"
-const persons: Person[] = [
+// initial sample persons
+const initialPersons: Person[] = [
   { id: 1, firstname: 'Alice', lastname: 'Adams', birthdate: new Date('1999-03-24') },
   { id: 2, firstname: 'Bobby', lastname: 'Brown', birthdate: new Date('1996-08-20') },
   { id: 3, firstname: 'Cecille', lastname: 'Cronfield', birthdate: new Date('1991-11-02') }
@@ -87,7 +86,7 @@ async function createSchemaAndData() {
   const row = await db!.get<{ count: number }>('SELECT COUNT(*) AS count FROM persons');
   if (row && row.count === 0) {
     // Insert sample records from persons array if empty
-    for(const person of persons) {
+    for(const person of initialPersons) {
       await db!.run('INSERT INTO persons (id, firstname, lastname, birthdate) VALUES (?, ?, ?, ?)',
         person.id, person.firstname, person.lastname, person.birthdate
       );
@@ -105,12 +104,12 @@ app.post('/api/persons', async (req: Request, res: Response) => {
   const { firstname, lastname, birthdate } = req.body; // assume body has correct shape so name is present
   try {
     const newPerson = new Person(firstname, lastname, new Date(birthdate));
-    db?.run('INSERT INTO persons (firstname, lastname, birthdate) VALUES (?, ?, ?)',
+    const addedPerson = await db?.get('INSERT INTO persons (firstname, lastname, birthdate) VALUES (?, ?, ?) RETURNING *',
       newPerson.firstname, newPerson.lastname, newPerson.birthdate
     );
-    res.json(newPerson); // return the newly created person; alternatively, you may return the full list of persons
+    res.json(addedPerson); // return the newly created person; alternatively, you may return the full list of persons
   } catch (error: Error | any) {
-    res.status(400).json({ message: error.message }); // bad request due to validation error
+    res.status(400).json({ message: error.message }); // bad request; validation or database error
   }
 });
 
@@ -120,12 +119,12 @@ app.put('/api/persons', async (req: Request, res: Response) => {
     if (typeof id !== 'number' || id <= 0) {
       throw new HttpError(400, 'ID was not provided correctly');
     }
-    const updatedPerson = new Person(firstname, lastname, new Date(birthdate));
-    updatedPerson.id = id;  // retain the original id
-    const result = await db?.run('UPDATE persons SET firstname = ?, lastname = ?, birthdate = ? WHERE id = ?',
-      updatedPerson.firstname, updatedPerson.lastname, updatedPerson.birthdate, updatedPerson.id
+    const personToUpdate = new Person(firstname, lastname, new Date(birthdate));
+    personToUpdate.id = id;  // retain the original id
+    const updatedPerson = await db?.get('UPDATE persons SET firstname = ?, lastname = ?, birthdate = ? WHERE id = ? RETURNING *',
+      personToUpdate.firstname, personToUpdate.lastname, personToUpdate.birthdate, personToUpdate.id
     );
-    if (result && result.changes && result.changes > 0) {
+    if (updatedPerson) {
       res.json(updatedPerson); // return the updated person
     } else {
       throw new HttpError(404, 'Person to update not found');
@@ -142,9 +141,9 @@ app.delete('/api/persons/:id', async (req: Request, res: Response) => {
     res.status(400).json({ message: 'ID was not provided correctly' });
     return;
   }
-  const result = await db?.run('DELETE FROM persons WHERE id = ?', id);
-  if (result && result.changes && result.changes > 0) {
-    res.json({ message: 'Person deleted successfully' });
+  const deletedPerson = await db?.get('DELETE FROM persons WHERE id = ? RETURNING *', id);
+  if (deletedPerson) {
+    res.json(deletedPerson); // return the deleted person
   } else {
     res.status(404).json({ message: 'Person to delete not found' });
   }

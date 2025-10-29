@@ -1,4 +1,4 @@
-<div class="mat-dialog-title">{{ data.row ? 'Edit' : 'New '}}</div>
+<div class="mat-dialog-title">{{ data.row ? 'Modify person' : 'New person' }}</div>
 
 <div class="mat-dialog-content">
   <person-form [row]="data.row" (validChange)="onFormValidChange($event)"></person-form>
@@ -8,7 +8,7 @@
   <button mat-stroked-button mat-dialog-close>Cancel</button>
 
   @if(data.row) {
-    <button mat-raised-button color="primary" (click)="onDelete()">Delete</button>
+    <button mat-raised-button color="primary" class="mat-warn-button" (click)="onDelete()">Delete</button>
     <button mat-raised-button color="primary" [disabled]="!formValid" (click)="onModify()">Modify</button>
   } @else {
     <button mat-raised-button color="primary" [disabled]="!formValid" (click)="onAdd()">Add</button>
