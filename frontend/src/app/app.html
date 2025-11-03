@@ -1,3 +1,17 @@
-<div>
-  <main-page></main-page>
+<mat-toolbar color="primary" class="app-toolbar">
+  <span class="app-title">{{ title }}</span>
+
+  <span class="spacer"></span>
+
+  <button mat-button routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
+    Home
+  </button>
+
+  <button mat-button routerLink="/persons" routerLinkActive="active-link">
+    Persons
+  </button>
+</mat-toolbar>
+
+<div class="content">
+  <router-outlet></router-outlet>
 </div>

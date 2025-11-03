@@ -2,21 +2,19 @@ import { Component } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 
-import { PersonsTableComponent } from '../components/persons-table';
-import { EditPersonDialog } from '../dialogs/edit-person';
+import { PersonsTableComponent } from '../../components/persons-table';
+import { EditPersonDialog } from '../../dialogs/edit-person';
 
 @Component({
-    selector: 'main-page',
+    selector: 'persons-page',
     imports: [MatButtonModule, PersonsTableComponent],
-    templateUrl: './main.html',
-    styleUrls: ['./main.scss'],
+    templateUrl: './persons.html',
+    styleUrls: ['./persons.scss'],
     standalone: true
 })
-export class MainPage {
+export class PersonsPage {
 
     constructor(private dialog: MatDialog) {}
-
-    protected title = 'PWS 2025';
 
     openDialog() {
         const dialogRef = this.dialog.open(EditPersonDialog, {
