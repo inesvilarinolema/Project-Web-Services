@@ -21,7 +21,9 @@
   },
   "homepage": "https://gitlab.com/mariusz.jarocki/pws2025#readme",
   "dependencies": {
+    "@faker-js/faker": "^10.1.0",
     "@types/express": "^5.0.3",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "morgan": "^1.10.1",
     "sqlite": "^5.1.1",
