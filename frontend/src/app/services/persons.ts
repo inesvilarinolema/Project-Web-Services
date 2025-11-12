@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 import { Person } from '../models/person';
@@ -17,8 +17,9 @@ export class PersonsService {
 
   constructor(private http: HttpClient) {}
 
-  getPersons(): Observable<Person[]> {
-    return this.http.get<Person[]>(this.apiUrl);
+  getPersons(filter: string = ''): Observable<Person[]> {
+    const params = new HttpParams().set('filter', filter);
+    return this.http.get<Person[]>(this.apiUrl, { params });
   }
 
   newPerson(person: Person): Observable<Person> {
@@ -30,7 +31,8 @@ export class PersonsService {
   }
 
   deletePerson(id: number): Observable<Person> {
-    return this.http.delete<Person>(this.apiUrl + '/' + id);
+    const params = new HttpParams().set('id', id);
+    return this.http.delete<Person>(this.apiUrl, { params });
   }
 
   // Method to notify subscribers to reload the persons list

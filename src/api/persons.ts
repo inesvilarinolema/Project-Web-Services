@@ -7,7 +7,8 @@ export const personsRouter = Router();
 
 // persons endpoints
 personsRouter.get('/', async (req: Request, res: Response) => {
-  const persons = await db?.connection?.all('SELECT * FROM persons');
+  const filter = `%${req.query.filter || ''}%`;
+  const persons = await db?.connection?.all('SELECT * FROM persons WHERE firstname LIKE ? OR lastname LIKE ?', [filter, filter]);
   res.json(persons);
 });
 
@@ -46,8 +47,8 @@ personsRouter.put('/', async (req: Request, res: Response) => {
   }
 });
 
-personsRouter.delete('/:id', async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id, 10);
+personsRouter.delete('/', async (req: Request, res: Response) => {
+  const id = parseInt(req.query.id as string, 10);
   if (isNaN(id) || id <= 0) {
     res.status(400).json({ message: 'ID was not provided correctly' });
     return;

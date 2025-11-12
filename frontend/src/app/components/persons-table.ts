@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { MatTableModule } from '@angular/material/table';
 import { Subscription } from 'rxjs';
 
@@ -20,6 +20,8 @@ export class PersonsTableComponent {
   persons: Person[] = [];
   private sub?: Subscription;
 
+  @Input() filter: string = '';
+
   constructor(private personsService: PersonsService, private dialog: MatDialog) {}
 
   ngOnInit() {
@@ -28,7 +30,7 @@ export class PersonsTableComponent {
   }
 
   loadData() {
-    this.personsService.getPersons().subscribe({
+    this.personsService.getPersons(this.filter).subscribe({
       next: (data) => (this.persons = data),
       error: (err) => console.error(err),
     });

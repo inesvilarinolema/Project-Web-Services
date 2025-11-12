@@ -12,7 +12,7 @@ export const db: { connection: Database | null } = {
 
 export async function openDb(): Promise<Database> {
   return open({
-    filename: './data.sqlite3',
+    filename: './db/data.sqlite3',
     driver: sqlite3.Database
   });
 }

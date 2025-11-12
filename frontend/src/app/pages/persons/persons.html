@@ -1,7 +1,17 @@
 <div>
-  <button mat-raised-button color="primary" (click)="openDialog()">
-    Add Person
-  </button>
+  <div class="controls-container">
+    <button mat-raised-button class="new-person-button" color="primary" (click)="openDialog()">
+      Add Person
+    </button>
 
-  <persons-table></persons-table>
+    <div class="spacer"></div>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-icon matPrefix>search</mat-icon>
+      <mat-label>Filter</mat-label>
+      <input matInput [formControl]="filterControl" placeholder="filter"/>
+    </mat-form-field>
+  </div>
+
+  <persons-table [filter]="filterControl.value || ''"></persons-table>
 </div>
