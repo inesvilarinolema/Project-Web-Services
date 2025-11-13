@@ -19,9 +19,15 @@ import { PersonsService } from '../../services/persons';
 })
 export class PersonsPage {
     filterControl = new FormControl('');
+    limitControl = new FormControl('10');
 
     constructor(private dialog: MatDialog, private personsService: PersonsService) {
         this.filterControl.valueChanges.
+            pipe(debounceTime(200)).
+            subscribe(value => {
+                this.personsService.notifyReload();
+            });
+        this.limitControl.valueChanges.
             pipe(debounceTime(200)).
             subscribe(value => {
                 this.personsService.notifyReload();

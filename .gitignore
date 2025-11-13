@@ -8,3 +8,4 @@ node_modules
 /.env
 *.code-workspace
 /db/**
+!/db/.gitkeep

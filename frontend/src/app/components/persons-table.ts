@@ -21,6 +21,7 @@ export class PersonsTableComponent {
   private sub?: Subscription;
 
   @Input() filter: string = '';
+  @Input() limit: string = '';
 
   constructor(private personsService: PersonsService, private dialog: MatDialog) {}
 
@@ -30,7 +31,7 @@ export class PersonsTableComponent {
   }
 
   loadData() {
-    this.personsService.getPersons(this.filter).subscribe({
+    this.personsService.getPersons(this.filter, this.limit).subscribe({
       next: (data) => (this.persons = data),
       error: (err) => console.error(err),
     });

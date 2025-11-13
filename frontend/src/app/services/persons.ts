@@ -17,8 +17,8 @@ export class PersonsService {
 
   constructor(private http: HttpClient) {}
 
-  getPersons(filter: string = ''): Observable<Person[]> {
-    const params = new HttpParams().set('filter', filter);
+  getPersons(filter: string = '', limit = ''): Observable<Person[]> {
+    const params = new HttpParams().set('filter', filter).set('limit', limit);
     return this.http.get<Person[]>(this.apiUrl, { params });
   }
 
