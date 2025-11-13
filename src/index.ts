@@ -2,9 +2,11 @@ import express from 'express';
 import morgan from 'morgan';
 import { config } from 'dotenv';
 
+import { db as sysdb, openDb as openSysDb, createIfNotExists } from './helpers/sysdb';
 import { db, openDb, createSchemaAndData } from './helpers/database';
 import { personsRouter } from './api/persons';
 import { errorHandler } from './helpers/errorhandling';
+import { authRouter, initAuth } from './helpers/auth';
 
 config({ quiet: true });
 
@@ -21,10 +23,17 @@ app.use(express.static(angularDistPath));
 app.use(express.json());
 
 async function main() {
+
+  sysdb.connection = await openSysDb();
+  console.log('System database connected');
+  await createIfNotExists();
+  await initAuth(app); 
+
   db.connection = await openDb();
   console.log('Database connected');
   await createSchemaAndData();
 
+  app.use('/api/auth', authRouter);
   app.use('/api/persons', personsRouter);
 
   // install our error handler (should be the last middleware)
@@ -36,5 +45,5 @@ async function main() {
 }
 
 main().catch(err => {
-  console.error('Startup failed');
+  console.error('Startup failed', err);
 })

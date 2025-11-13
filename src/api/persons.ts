@@ -9,7 +9,7 @@ export const personsRouter = Router();
 personsRouter.get('/', async (req: Request, res: Response) => {
   const filter = `%${req.query.filter || ''}%`;
   let limit = parseInt(req.query.limit as string || '10')
-  if(isNaN(limit) && limit < 1) limit = 10;
+  if(isNaN(limit) || limit < 1) throw new HttpError(400, 'Limit is not properly set');
   const persons = await db?.connection?.all('SELECT * FROM persons WHERE firstname LIKE ? OR lastname LIKE ? LIMIT ?', [filter, filter, limit]);
   res.json(persons);
 });

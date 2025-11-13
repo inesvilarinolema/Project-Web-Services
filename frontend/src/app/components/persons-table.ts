@@ -47,4 +47,8 @@ export class PersonsTableComponent {
   ngOnDestroy() {
     this.sub?.unsubscribe();
   }
+
+  formatDate(date: any) {
+    return new Date(date).toLocaleDateString()
+  }
 }
