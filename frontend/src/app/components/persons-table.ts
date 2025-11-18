@@ -16,7 +16,7 @@ import { MatDialog } from '@angular/material/dialog';
   standalone: true
 })
 export class PersonsTableComponent {
-  displayedColumns: string[] = ['id', 'firstname', 'lastname', 'birthdate'];
+  displayedColumns: string[] = ['id', 'firstname', 'lastname', 'birthdate', 'team'];
   persons: Person[] = [];
   private sub?: Subscription;
 

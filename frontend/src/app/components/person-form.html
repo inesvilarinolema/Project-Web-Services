@@ -29,6 +29,16 @@
                 }
             </mat-form-field>
 
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Team</mat-label>
+                <mat-select formControlName="team_id">
+                    <mat-option [value]="null">no team</mat-option>
+                    @for (team of teams; track team.id) {
+                        <mat-option [value]="team.id">{{ team.fullname }}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+
         </mat-card-content>
     </mat-card>
 

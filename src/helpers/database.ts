@@ -21,7 +21,11 @@ export async function createSchemaAndData() {
   // Create a structure
   await db!.connection!.run(`
     CREATE TABLE IF NOT EXISTS persons
-      (id INTEGER PRIMARY KEY AUTOINCREMENT, firstname TEXT, lastname TEXT, birthdate DATE)
+      (id INTEGER PRIMARY KEY AUTOINCREMENT, firstname TEXT, lastname TEXT, birthdate DATE, team_id INTEGER)
+    `);
+  await db!.connection!.run(`
+    CREATE TABLE IF NOT EXISTS teams
+      (id INTEGER PRIMARY KEY AUTOINCREMENT, shortname TEXT, fullname TEXT, color TEXT)
     `);
   // Check if it is required to insert sample data
   const dbFakeNum: number = parseInt(process.env.DBFAKENUM || '0') || 0;

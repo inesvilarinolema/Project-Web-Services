@@ -5,14 +5,17 @@ import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatSelectModule } from '@angular/material/select';
 
 import { Person } from '../models/person'
+import { Team } from '../models/team';
+import { TeamsService } from '../services/teams';
 
 @Component({
   selector: 'person-form',
   templateUrl: './person-form.html',
   styleUrls: ['./person-form.scss'],
-  imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatInputModule, MatButtonModule, MatDatepickerModule],
+  imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatInputModule, MatButtonModule, MatDatepickerModule, MatSelectModule],
   standalone: true
 })
 export class PersonFormComponent {
@@ -20,17 +23,25 @@ export class PersonFormComponent {
   @Output() validChange = new EventEmitter<boolean>();
   
   form: FormGroup;
+  teams: Team[] = [];
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private teamsService: TeamsService) {
     this.form = this.fb.group({
       firstname: ['', Validators.required],
       lastname: ['', Validators.required],
-      birthdate: [null, Validators.required]
+      birthdate: [null, Validators.required],
+      team_id: [null]
     });
 
     this.form.statusChanges.subscribe(() => {
       this.validChange.emit(this.form.valid);
     });
+  }
+
+  ngOnInit() {
+    this.teamsService.getTeams().subscribe(teams => {
+      this.teams = teams;
+    })
   }
 
   ngOnChanges(changes: SimpleChanges) {

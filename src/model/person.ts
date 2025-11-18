@@ -6,8 +6,9 @@ export class Person {
   firstname: string;
   lastname: string;
   birthdate: Date;
+  team_id: number | null;
 
-  constructor(firstname: string, lastname: string, birthdate: Date) {
+  constructor(firstname: string, lastname: string, birthdate: Date, team_id: number | null) {
     if (!firstname || typeof firstname !== 'string' || firstname.trim().length === 0)
       throw new HttpError(400, 'First name was not provided correctly');
     if( !lastname || typeof lastname !== 'string' || lastname.trim().length === 0)
@@ -19,5 +20,6 @@ export class Person {
     this.firstname = firstname;
     this.lastname = lastname;
     this.birthdate = birthdate;
+    this.team_id = team_id;
   }
 }

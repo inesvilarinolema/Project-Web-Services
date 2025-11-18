@@ -7,6 +7,7 @@ import { db, openDb, createSchemaAndData } from './helpers/database';
 import { personsRouter } from './api/persons';
 import { errorHandler } from './helpers/errorhandling';
 import { authRouter, initAuth } from './helpers/auth';
+import { teamsRouter } from './api/teams';
 
 config({ quiet: true });
 
@@ -35,6 +36,7 @@ async function main() {
 
   app.use('/api/auth', authRouter);
   app.use('/api/persons', personsRouter);
+  app.use('/api/teams', teamsRouter);
 
   // install our error handler (should be the last middleware)
   app.use(errorHandler);

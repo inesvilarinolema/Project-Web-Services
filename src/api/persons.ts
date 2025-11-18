@@ -10,16 +10,20 @@ personsRouter.get('/', async (req: Request, res: Response) => {
   const filter = `%${req.query.filter || ''}%`;
   let limit = parseInt(req.query.limit as string || '10')
   if(isNaN(limit) || limit < 1) throw new HttpError(400, 'Limit is not properly set');
-  const persons = await db?.connection?.all('SELECT * FROM persons WHERE firstname LIKE ? OR lastname LIKE ? LIMIT ?', [filter, filter, limit]);
+  const persons = await db?.connection?.all(
+    `SELECT persons.*,teams.shortname,teams.color FROM persons
+     LEFT JOIN teams ON persons.team_id=teams.id
+     WHERE firstname LIKE ? OR lastname LIKE ? LIMIT ?`
+     , [filter, filter, limit]);
   res.json(persons);
 });
 
 personsRouter.post('/', async (req: Request, res: Response) => {
-  const { firstname, lastname, birthdate } = req.body; // assume body has correct shape so name is present
+  const { firstname, lastname, birthdate, team_id } = req.body; // assume body has correct shape so name is present
   try {
-    const newPerson = new Person(firstname, lastname, new Date(birthdate));
-    const addedPerson = await db?.connection?.get('INSERT INTO persons (firstname, lastname, birthdate) VALUES (?, ?, ?) RETURNING *',
-      newPerson.firstname, newPerson.lastname, newPerson.birthdate
+    const newPerson = new Person(firstname, lastname, new Date(birthdate), team_id);
+    const addedPerson = await db?.connection?.get('INSERT INTO persons (firstname, lastname, birthdate, team_id) VALUES (?, ?, ?, ?) RETURNING *',
+      newPerson.firstname, newPerson.lastname, newPerson.birthdate, newPerson.team_id
     );
     res.json(addedPerson); // return the newly created person; alternatively, you may return the full list of persons
   } catch (error: Error | any) {
@@ -28,15 +32,15 @@ personsRouter.post('/', async (req: Request, res: Response) => {
 });
 
 personsRouter.put('/', async (req: Request, res: Response) => {
-  const { id, firstname, lastname, birthdate } = req.body;
+  const { id, firstname, lastname, birthdate, team_id } = req.body;
   try {
     if (typeof id !== 'number' || id <= 0) {
       throw new HttpError(400, 'ID was not provided correctly');
     }
-    const personToUpdate = new Person(firstname, lastname, new Date(birthdate));
+    const personToUpdate = new Person(firstname, lastname, new Date(birthdate), team_id);
     personToUpdate.id = id;  // retain the original id
-    const updatedPerson = await db?.connection?.get('UPDATE persons SET firstname = ?, lastname = ?, birthdate = ? WHERE id = ? RETURNING *',
-      personToUpdate.firstname, personToUpdate.lastname, personToUpdate.birthdate, personToUpdate.id
+    const updatedPerson = await db?.connection?.get('UPDATE persons SET firstname = ?, lastname = ?, birthdate = ?, team_id = ? WHERE id = ? RETURNING *',
+      personToUpdate.firstname, personToUpdate.lastname, personToUpdate.birthdate, personToUpdate.team_id, personToUpdate.id
     );
     if (updatedPerson) {
       res.json(updatedPerson); // return the updated person
