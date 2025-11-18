@@ -35,7 +35,8 @@ export async function createSchemaAndData() {
       const fakePerson = new Person(
         faker.person.firstName(),
         faker.person.lastName(),
-        faker.date.birthdate({ min: 1950, max: 2020, mode: 'year' })
+        faker.date.birthdate({ min: 1950, max: 2020, mode: 'year' }),
+        null
       );
       await db.connection!.run(
         'INSERT INTO persons (firstname, lastname, birthdate) VALUES (?, ?, ?)',
