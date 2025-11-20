@@ -7,12 +7,13 @@ import { Person } from '../models/person'
 import { PersonsService } from '../services/persons';
 import { EditPersonDialog } from '../dialogs/edit-person';
 import { MatDialog } from '@angular/material/dialog';
+import { MatChipsModule } from '@angular/material/chips';
 
 @Component({
   selector: 'persons-table',
   templateUrl: './persons-table.html',
   styleUrls: ['./persons-table.scss'],
-  imports: [CommonModule, MatTableModule],
+  imports: [CommonModule, MatTableModule, MatChipsModule],
   standalone: true
 })
 export class PersonsTableComponent {
