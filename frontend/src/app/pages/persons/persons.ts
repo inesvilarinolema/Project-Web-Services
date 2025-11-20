@@ -9,6 +9,8 @@ import { debounceTime } from 'rxjs';
 import { PersonsTableComponent } from '../../components/persons-table';
 import { EditPersonDialog } from '../../dialogs/edit-person';
 import { PersonsService } from '../../services/persons';
+import { AuthService } from '../../services/auth';
+import { User } from '../../models/user';
 
 @Component({
     selector: 'persons-page',
@@ -20,8 +22,10 @@ import { PersonsService } from '../../services/persons';
 export class PersonsPage {
     filterControl = new FormControl('');
     limitControl = new FormControl('10');
+    user: User | null = null;
 
-    constructor(private dialog: MatDialog, private personsService: PersonsService) {
+    constructor(private dialog: MatDialog, private personsService: PersonsService, private authService: AuthService) {
+        this.authService.currentUser$.subscribe(user => { this.user = user});
         this.filterControl.valueChanges.
             pipe(debounceTime(200)).
             subscribe(value => {
@@ -39,5 +43,9 @@ export class PersonsPage {
             width: '75%',
             data: { row: null }
         });
+    }
+
+    isInRole(roles: number[]) {
+        return this.authService.isInRole(this.user, roles);
     }
 }

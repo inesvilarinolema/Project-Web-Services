@@ -36,13 +36,13 @@ export class AuthService {
     );
   }
 
-  isInRole(user: User, roles: number[]): boolean {
+  isInRole(user: User | null, roles: number[]): boolean {
     if (!roles || roles.length === 0) return true;
     if (!user?.roles) return false;
     return user.roles.some((role: number) => roles?.includes(role));
   }  
 
-  isRouteAvailable(user: User, route: AppRoute): boolean {
+  isRouteAvailable(user: User | null, route: AppRoute): boolean {
     return this.isInRole(user!, route.roles || []);
   }
 }

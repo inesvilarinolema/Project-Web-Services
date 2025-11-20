@@ -9,5 +9,5 @@ export interface AppRoute extends Route {
 
 export const routes: AppRoute[] = [
   { path: '', component: HomePage, title: 'Home', icon: 'home' },
-  { path: 'persons', component: PersonsPage, title: 'Persons', icon: 'people' }
+  { path: 'persons', component: PersonsPage, title: 'Persons', icon: 'people', roles: [0,1] }
 ];

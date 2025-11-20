@@ -1,22 +1,26 @@
-<div>
-  <div class="controls-container">
-    <button mat-raised-button class="new-person-button" color="primary" (click)="openDialog()">
-      Add Person
-    </button>
+@if(isInRole([0,1])) {
+  <div>
+    <div class="controls-container">
+      @if(isInRole([0])) {
+        <button mat-raised-button class="new-person-button" color="primary" (click)="openDialog()">
+          Add Person
+        </button>
+      }
 
-    <div class="spacer"></div>
+      <div class="spacer"></div>
 
-    <mat-form-field appearance="outline" class="filter-field">
-      <mat-icon matPrefix>search</mat-icon>
-      <mat-label>Filter</mat-label>
-      <input matInput [formControl]="filterControl" placeholder="filter"/>
-    </mat-form-field>
-    <mat-form-field appearance="outline" class="filter-field">
-      <mat-icon matPrefix>numbers</mat-icon>
-      <mat-label>Limit</mat-label>
-      <input matInput type="number" [formControl]="limitControl" placeholder="limit"/>
-    </mat-form-field>
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-icon matPrefix>search</mat-icon>
+        <mat-label>Filter</mat-label>
+        <input matInput [formControl]="filterControl" placeholder="filter"/>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-icon matPrefix>numbers</mat-icon>
+        <mat-label>Limit</mat-label>
+        <input matInput type="number" [formControl]="limitControl" placeholder="limit"/>
+      </mat-form-field>
+    </div>
+
+    <persons-table [filter]="filterControl.value || ''" [limit]="limitControl.value || ''"></persons-table>
   </div>
-
-  <persons-table [filter]="filterControl.value || ''" [limit]="limitControl.value || ''"></persons-table>
-</div>
+}

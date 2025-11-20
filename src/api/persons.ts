@@ -2,11 +2,12 @@ import { Router, Request, Response } from 'express';
 import { db } from '../helpers/database';
 import { Person } from '../model/person';
 import { HttpError } from '../helpers/errorhandling';
+import { requireRole } from '../helpers/auth';
 
 export const personsRouter = Router();
 
 // persons endpoints
-personsRouter.get('/', async (req: Request, res: Response) => {
+personsRouter.get('/', requireRole([0,1]), async (req: Request, res: Response) => {
   const filter = `%${req.query.filter || ''}%`;
   let limit = parseInt(req.query.limit as string || '10')
   if(isNaN(limit) || limit < 1) throw new HttpError(400, 'Limit is not properly set');
@@ -18,7 +19,7 @@ personsRouter.get('/', async (req: Request, res: Response) => {
   res.json(persons);
 });
 
-personsRouter.post('/', async (req: Request, res: Response) => {
+personsRouter.post('/', requireRole([0]), async (req: Request, res: Response) => {
   const { firstname, lastname, birthdate, team_id } = req.body; // assume body has correct shape so name is present
   try {
     const newPerson = new Person(firstname, lastname, new Date(birthdate), team_id);
@@ -31,7 +32,7 @@ personsRouter.post('/', async (req: Request, res: Response) => {
   }
 });
 
-personsRouter.put('/', async (req: Request, res: Response) => {
+personsRouter.put('/', requireRole([0]), async (req: Request, res: Response) => {
   const { id, firstname, lastname, birthdate, team_id } = req.body;
   try {
     if (typeof id !== 'number' || id <= 0) {
@@ -53,7 +54,7 @@ personsRouter.put('/', async (req: Request, res: Response) => {
   }
 });
 
-personsRouter.delete('/', async (req: Request, res: Response) => {
+personsRouter.delete('/', requireRole([0]), async (req: Request, res: Response) => {
   const id = parseInt(req.query.id as string, 10);
   if (isNaN(id) || id <= 0) {
     res.status(400).json({ message: 'ID was not provided correctly' });
