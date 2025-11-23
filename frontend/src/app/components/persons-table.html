@@ -23,7 +23,7 @@
 <ng-container matColumnDef="team">
     <th mat-header-cell *matHeaderCellDef> Team </th>
     <td mat-cell *matCellDef="let person">
-    @if(person.team_id) {
+    @if(person.shortname) {
       <mat-chip [style.background-color]="person.color" [ngStyle]="{
         '--mat-chip-label-text-color': 'white',
         'background-color': person.color
