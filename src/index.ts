@@ -17,7 +17,7 @@ const app = express();
 app.use(morgan('tiny'));
 
 // static files (angular app)
-const angularDistPath = '../frontend/dist/frontend/browser';
+const angularDistPath = './frontend/dist/frontend/browser';
 app.use(express.static(angularDistPath));
 
 // automatic parsing of json payloads

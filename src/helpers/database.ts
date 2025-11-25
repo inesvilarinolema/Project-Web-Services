@@ -23,10 +23,18 @@ export async function createSchemaAndData() {
     CREATE TABLE IF NOT EXISTS persons
       (id INTEGER PRIMARY KEY AUTOINCREMENT, firstname TEXT, lastname TEXT, birthdate DATE, team_id INTEGER)
     `);
-  await db!.connection!.run(`
-    CREATE TABLE IF NOT EXISTS teams
-      (id INTEGER PRIMARY KEY AUTOINCREMENT, shortname TEXT, fullname TEXT, color TEXT)
-    `);
+  try {
+    await db!.connection!.run(`
+      CREATE TABLE teams
+        (id INTEGER PRIMARY KEY AUTOINCREMENT, shortname TEXT, fullname TEXT, color TEXT)
+      `);
+    await db!.connection!.run(`
+      INSERT INTO teams (shortname, fullname, color) VALUES
+        ('MCI', 'Manchester City', 'lightblue'),
+        ('MUN', 'Manchester United', 'red'),
+        ('CHE', 'Chelsea', 'blue');
+      `);   
+  } catch(_ex) {}
   // Check if it is required to insert sample data
   const dbFakeNum: number = parseInt(process.env.DBFAKENUM || '0') || 0;
   if (dbFakeNum > 0) {

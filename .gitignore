@@ -7,5 +7,3 @@ node_modules
 /data.sqlite3
 /.env
 *.code-workspace
-/db/**
-!/db/.gitkeep
