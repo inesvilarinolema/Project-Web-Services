@@ -35,6 +35,12 @@ export async function createSchemaAndData() {
         ('CHE', 'Chelsea', 'blue');
       `);   
   } catch(_ex) {}
+  try {
+    await db!.connection!.run(`
+      CREATE TABLE membership
+        (person_id INTEGER PRIMARY KEY, team_id INTEGER PRIMARY KEY)
+      `);
+  } catch(_ex) {}
   // Check if it is required to insert sample data
   const dbFakeNum: number = parseInt(process.env.DBFAKENUM || '0') || 0;
   if (dbFakeNum > 0) {
@@ -43,8 +49,7 @@ export async function createSchemaAndData() {
       const fakePerson = new Person(
         faker.person.firstName(),
         faker.person.lastName(),
-        faker.date.birthdate({ min: 1950, max: 2020, mode: 'year' }),
-        null
+        faker.date.birthdate({ min: 1950, max: 2020, mode: 'year' })
       );
       await db.connection!.run(
         'INSERT INTO persons (firstname, lastname, birthdate) VALUES (?, ?, ?)',

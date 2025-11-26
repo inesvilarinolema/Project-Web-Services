@@ -3,4 +3,6 @@ export interface Person {
   firstname: string;
   lastname: string;
   birthdate: Date;
+  team_ids?: number[];
+  team_objects?: any[];
 }

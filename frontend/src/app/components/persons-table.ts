@@ -49,6 +49,7 @@ export class PersonsTableComponent {
 
   openDialog(row: Person | null) {
       if(!this.isInRole([0])) return;
+      row!.team_ids = row?.team_objects?.map(team => team.id);
       const dialogRef = this.dialog.open(EditPersonDialog, {
         width: '75%',
         data: { row }

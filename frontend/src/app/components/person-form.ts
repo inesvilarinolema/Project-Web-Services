@@ -30,7 +30,7 @@ export class PersonFormComponent {
       firstname: ['', Validators.required],
       lastname: ['', Validators.required],
       birthdate: [null, Validators.required],
-      team_id: [null]
+      team_ids: [[]]
     });
 
     this.form.statusChanges.subscribe(() => {
