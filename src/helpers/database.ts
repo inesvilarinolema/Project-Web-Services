@@ -18,44 +18,62 @@ export async function openDb(): Promise<Database> {
 }
 
 export async function createSchemaAndData() {
-  // Create a structure
-  await db!.connection!.run(`
-    CREATE TABLE IF NOT EXISTS persons
-      (id INTEGER PRIMARY KEY AUTOINCREMENT, firstname TEXT, lastname TEXT, birthdate DATE, team_id INTEGER)
-    `);
+  // to switch on checking foreign key references
+  await db!.connection!.run('PRAGMA foreign_keys = ON');
+
+  // Create a structure and sample data
+
+  // persons
+  try {
+      await db!.connection!.run(`
+        CREATE TABLE persons
+          (id INTEGER PRIMARY KEY AUTOINCREMENT, firstname TEXT, lastname TEXT, birthdate DATE)
+        `);
+      console.log('Table persons created');
+      // Check if it is required to insert sample data
+      const dbFakeNum: number = parseInt(process.env.DBFAKENUM || '0') || 0;
+      if (dbFakeNum > 0) {
+        // Insert sample records
+        for(let i = 0; i < dbFakeNum; i++) {
+          const fakePerson = new Person(
+            faker.person.firstName(),
+            faker.person.lastName(),
+            faker.date.birthdate({ min: 1950, max: 2020, mode: 'year' })
+          );
+          await db.connection!.run(
+            'INSERT INTO persons (firstname, lastname, birthdate) VALUES (?, ?, ?)',
+            fakePerson.firstname, fakePerson.lastname, fakePerson.birthdate
+          );
+        }
+        console.log(`${dbFakeNum} fake records created`);
+      }
+  } catch(_ex) {}
+
+  // teams
   try {
     await db!.connection!.run(`
       CREATE TABLE teams
         (id INTEGER PRIMARY KEY AUTOINCREMENT, shortname TEXT, fullname TEXT, color TEXT)
       `);
-    await db!.connection!.run(`
-      INSERT INTO teams (shortname, fullname, color) VALUES
-        ('MCI', 'Manchester City', 'lightblue'),
-        ('MUN', 'Manchester United', 'red'),
-        ('CHE', 'Chelsea', 'blue');
-      `);   
-  } catch(_ex) {}
-  try {
-    await db!.connection!.run(`
-      CREATE TABLE membership
-        (person_id INTEGER PRIMARY KEY, team_id INTEGER PRIMARY KEY)
-      `);
-  } catch(_ex) {}
-  // Check if it is required to insert sample data
-  const dbFakeNum: number = parseInt(process.env.DBFAKENUM || '0') || 0;
-  if (dbFakeNum > 0) {
-    // Insert sample records
-    for(let i = 0; i < dbFakeNum; i++) {
-      const fakePerson = new Person(
-        faker.person.firstName(),
-        faker.person.lastName(),
-        faker.date.birthdate({ min: 1950, max: 2020, mode: 'year' })
-      );
-      await db.connection!.run(
-        'INSERT INTO persons (firstname, lastname, birthdate) VALUES (?, ?, ?)',
-        fakePerson.firstname, fakePerson.lastname, fakePerson.birthdate
-      );
-    }
-    console.log(`Inserted ${dbFakeNum} fake persons`); 
-  }
+      console.log('Table teams created, insert some data');
+      await db!.connection!.run(`
+        INSERT INTO teams (shortname, fullname, color) VALUES
+          ('MCI', 'Manchester City', 'Lightblue'),
+          ('MUN', 'Manchester United', 'Red'),
+          ('CHE', 'Chelsea', 'Blue');
+        `);   
+    } catch(_ex) {}
+
+    // membership
+    try {
+        await db!.connection!.run(`
+          CREATE TABLE membership (
+            person_id INTEGER NOT NULL,
+            team_id INTEGER NOT NULL,
+            PRIMARY KEY (person_id, team_id),
+            FOREIGN KEY (person_id) REFERENCES persons(id),
+            FOREIGN KEY (team_id) REFERENCES teams(id)
+        )`);
+        console.log('Table membership created');
+    } catch(_ex) {}
 }

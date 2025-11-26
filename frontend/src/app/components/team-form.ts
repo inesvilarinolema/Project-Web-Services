@@ -22,7 +22,6 @@ export class TeamFormComponent {
   @Output() validChange = new EventEmitter<boolean>();
   
   form: FormGroup;
-  teams: Team[] = [];
   colors: String[] = [
     "AliceBlue", "AntiqueWhite", "Aqua", "Aquamarine", "Azure", "Beige", "Bisque",
     "Black", "BlanchedAlmond", "Blue", "BlueViolet", "Brown", "BurlyWood",
@@ -63,12 +62,6 @@ export class TeamFormComponent {
     this.form.statusChanges.subscribe(() => {
       this.validChange.emit(this.form.valid);
     });
-  }
-
-  ngOnInit() {
-    this.teamsService.getTeams().subscribe(teams => {
-      this.teams = teams;
-    })
   }
 
   ngOnChanges(changes: SimpleChanges) {
