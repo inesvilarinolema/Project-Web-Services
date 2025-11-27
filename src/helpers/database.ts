@@ -58,7 +58,7 @@ export async function createSchemaAndData() {
       console.log('Table teams created, insert some data');
       await db!.connection!.run(`
         INSERT INTO teams (shortname, fullname, color) VALUES
-          ('MCI', 'Manchester City', 'Lightblue'),
+          ('MCI', 'Manchester City', 'LightBlue'),
           ('MUN', 'Manchester United', 'Red'),
           ('CHE', 'Chelsea', 'Blue');
         `);   
