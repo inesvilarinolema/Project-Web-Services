@@ -1,15 +1,27 @@
+import { HttpError } from "../helpers/errors";
+import { COLORS } from "../shared/colors";
+
 // schema for a team
 export class Team {
   id: number;
-  shortname: string;
-  fullname: string;
+  name: string;
+  longname: string;
   color: string;
+  has_avatar: boolean;
 
-  constructor(shortname: string, fullname: string, color: string) {
+  constructor(name: string, longname: string, color: string, has_avatar: boolean = false) {
+
+    if (!name || typeof name !== 'string' || name.trim().length === 0)
+      throw new HttpError(400, 'Name was not provided correctly');
+    if (!name || typeof longname !== 'string' || longname.trim().length === 0)
+      throw new HttpError(400, 'Long name was not provided correctly');
+    if (!color || typeof color !== 'string' || color.trim().length === 0 || !COLORS.includes(color))
+      throw new HttpError(400, 'Color was not provided correctly');
 
     this.id = 0; // will be set by the database AUTOINCREMENT
-    this.shortname = shortname;
-    this.fullname = fullname;
+    this.name = name;
+    this.longname = longname;
     this.color = color;
+    this.has_avatar = has_avatar;
   }
 }

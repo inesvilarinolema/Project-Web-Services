@@ -5,7 +5,7 @@ import passport from 'passport';
 import SQLiteStoreFactory from 'connect-sqlite3';
 
 import { User } from '../model/user';
-import { HttpError } from './errorhandling';
+import { HttpError } from './errors';
 import { reloadUsers } from './sysdb';
 
 export const authRouter = Router();
@@ -66,7 +66,7 @@ export async function initAuth(app: Express, reset: boolean = false): Promise<vo
       resave: false,
       saveUninitialized: false,
       // store sessions in sqlite database
-      store: new SQLiteStore({ db: './db/sessions.sqlite3' }) as session.Store,
+      store: new SQLiteStore({ db: process.env.SESSIONSDBFILE || './db/sessions.sqlite3' }) as session.Store,
       cookie: { maxAge: 86400000 } // default 1 day
     })
   );

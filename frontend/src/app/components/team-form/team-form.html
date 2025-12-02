@@ -1,0 +1,57 @@
+<form [formGroup]="form">
+
+    <mat-card>
+        <mat-card-content class="form-container">
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Name</mat-label>
+                <input matInput formControlName="name" placeholder="Name" required/>
+                @if(form.get('name')?.invalid) {
+                    <mat-error>Name is required</mat-error>
+                }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Long name</mat-label>
+                <input matInput formControlName="longname" placeholder="Long name" required/>
+                @if(form.get('longname')?.invalid) {
+                    <mat-error>Long name is required</mat-error>
+                }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Color</mat-label>
+                <mat-select formControlName="color" required>
+                    @for (c of colors; track c) {
+                    <mat-option [value]="c">
+                        <span class="color-preview" [style.background]="c"></span>
+                        {{ c }}
+                    </mat-option>
+                    }
+                </mat-select>
+                @if(form.get('color')?.invalid) {
+                    <mat-error>Color is required</mat-error>
+                }
+            </mat-form-field>
+
+            <!-- Avatar upload -->
+            <div class="avatar-upload">
+                <input type="file" accept="image/*" (change)="onFileSelected($event)" id="avatarInput" hidden/>
+                <label for="avatarInput" class="upload-button mat-elevation-z2">
+                    select avatar...
+                </label>
+
+                @if(avatarPreview) {
+                    <div class="avatar-preview">
+                        <img [src]="avatarPreview" alt="Avatar Preview"/>
+                        <button title="x" mat-icon-button color="warn" class="clear-btn" (click)="clearAvatar()" type="button">
+                            <mat-icon>close</mat-icon>
+                        </button>
+                    </div>
+                }
+            </div>
+
+        </mat-card-content>
+    </mat-card>
+
+</form>

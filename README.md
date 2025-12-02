@@ -114,5 +114,8 @@ cd frontend
 npm run dev
 ```
 
+##### Reinitialize databases
+Simply delete all/selected `*.sqlite3` files from db folder
+
 ##### Enjoy the working Webapp in your browser! :)
 http://localhost:4200

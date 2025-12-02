@@ -13,30 +13,37 @@ export const db: { connection: Database | null} = {
 
 export async function openDb(): Promise<Database> {
   return open({
-    filename: './db/sysdb.sqlite3',
+    filename: process.env.SYSDBFILE || './db/sysdb.sqlite3',
     driver: sqlite3.Database
   });
 }
 
 export async function createIfNotExists(): Promise<void> {
-  const createUsersTable = `
-    CREATE TABLE users (  
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT NOT NULL UNIQUE,
-      password TEXT NOT NULL,
-      roles TEXT NOT NULL)`;
-  try {
-    await db.connection!.run(createUsersTable);
-    // we can assume that the table has been just created, insert default users
-    await db.connection!.run(
-      'INSERT INTO users (username, password, roles) VALUES (?, ?, ?)',
-      'admin', hashPassword(process.env.ADMINPASSWORD || 'Admin123'), JSON.stringify([0])
-    );
-    await db.connection!.run(
-      'INSERT INTO users (username, password, roles) VALUES (?, ?, ?)',
-      'user', hashPassword(process.env.USERPASSWORD || 'User123'), JSON.stringify([1])
-    );
-  } catch(err) {}
+    const { user_version } = await db.connection!.get('PRAGMA user_version;') // get current db version
+    if(!user_version) { // fresh database
+  
+        const createUsersTable = `
+            CREATE TABLE users (  
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            password TEXT NOT NULL,
+            roles TEXT NOT NULL)`;
+        try {
+            await db.connection!.exec('PRAGMA user_version = 1;'); // set db version to 1
+            await db.connection!.run(createUsersTable);
+            // we can assume that the table has been just created, insert default users
+            await db.connection!.run(
+                'INSERT INTO users (username, password, roles) VALUES (?, ?, ?)',
+                'admin', hashPassword(process.env.ADMINPASSWORD || 'Admin123'), JSON.stringify([0])
+            );
+            await db.connection!.run(
+                'INSERT INTO users (username, password, roles) VALUES (?, ?, ?)',
+                'user', hashPassword(process.env.USERPASSWORD || 'User123'), JSON.stringify([1])
+            );
+        } catch(err) {
+            throw new Error('Error creating system database: ' + (err as Error).message);
+        }
+    }
 }
 
 export async function loadUsers(): Promise<User[]> {

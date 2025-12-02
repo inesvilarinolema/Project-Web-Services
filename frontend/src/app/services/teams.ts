@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 
 import { Team } from '../models/team';
 
@@ -22,12 +22,17 @@ export class TeamsService {
     return this.http.get<Team[]>(this.apiUrl, { params });
   }
 
-  newTeam(team: Team): Observable<Team> {
-    return this.http.post<Team>(this.apiUrl, team);
+  newTeam(team: Team, avatarFile: File | undefined): Observable<Team> {
+    return this.http.post<Team>(this.apiUrl, { ...team, has_avatar: !!avatarFile }).pipe(
+      tap((createdTeam: Team) => {
+        this.uploadAvatar(createdTeam.id, avatarFile);
+      })
+    );
   }
 
-  modifyTeam(team: Team): Observable<Team> {
-    return this.http.put<Team>(this.apiUrl, team);
+  modifyTeam(team: Team, avatarFile: File | undefined): Observable<Team> {
+    this.uploadAvatar(team.id, avatarFile);
+    return this.http.put<Team>(this.apiUrl, { ...team, has_avatar: !!avatarFile });
   }
 
   deleteTeam(id: number): Observable<Team> {
@@ -38,5 +43,19 @@ export class TeamsService {
   // Method to notify subscribers to reload the teams list
   notifyReload() {
     this.reloadSubject.next();
+  }
+
+  uploadAvatar(id: number, file: File | undefined) {
+    const formData = new FormData();
+    if (file) {
+      formData.append('file', file.name ? file : new Blob([file], { type: file.type }), file.name);
+    }
+    formData.append('path', 'avatar');
+    formData.append('name', id.toString() + '.png');
+
+    fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+    });
   }
 }

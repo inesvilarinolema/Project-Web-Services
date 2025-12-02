@@ -30,14 +30,16 @@
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Team</mat-label>
+                <mat-label>Teams</mat-label>
                 <mat-select formControlName="team_ids" multiple>
                     @for (team of teams; track team.id) {
-                        <mat-option [value]="team.id">{{ team.fullname }}</mat-option>
+                        <mat-option [value]="team.id">
+                            <span class="color-preview" [style.background]="team.color"></span>
+                            {{ team.name }}
+                        </mat-option>
                     }
                 </mat-select>
             </mat-form-field>
-
         </mat-card-content>
     </mat-card>
 

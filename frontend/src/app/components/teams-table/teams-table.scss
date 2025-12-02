@@ -1,0 +1,15 @@
+.clickable-row:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+}
+
+.centered {
+  text-align: center;
+}
+
+.avatar-image {
+  border-radius: 50%;
+  object-fit: cover;
+  width: 32px;
+  height: 32px;
+}

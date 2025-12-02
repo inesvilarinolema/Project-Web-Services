@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response, NextFunction } from "express";
 
 // new Error class
 export class HttpError extends Error {
@@ -19,3 +19,4 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     console.error('ERROR!', message);
     res.status(status).json({ message });
 }
+

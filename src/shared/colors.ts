@@ -1,28 +1,4 @@
-import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatSelectModule } from '@angular/material/select';
-import { MatOptionModule } from '@angular/material/core';
-
-import { Team } from '../models/team';
-import { TeamsService } from '../services/teams';
-
-@Component({
-  selector: 'team-form',
-  templateUrl: './team-form.html',
-  styleUrls: ['./team-form.scss'],
-  imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatInputModule, MatButtonModule, MatSelectModule, MatOptionModule],
-  standalone: true
-})
-export class TeamFormComponent {
-  @Input() row!: Team;
-  @Output() validChange = new EventEmitter<boolean>();
-  
-  form: FormGroup;
-  colors: String[] = [
+export const COLORS: string[] = [
     "AliceBlue", "AntiqueWhite", "Aqua", "Aquamarine", "Azure", "Beige", "Bisque",
     "Black", "BlanchedAlmond", "Blue", "BlueViolet", "Brown", "BurlyWood",
     "CadetBlue", "Chartreuse", "Chocolate", "Coral", "CornflowerBlue", "Cornsilk",
@@ -51,27 +27,3 @@ export class TeamFormComponent {
     "Tomato", "Turquoise", "Violet", "Wheat", "White", "WhiteSmoke", "Yellow",
     "YellowGreen"
   ];
-
-  constructor(private fb: FormBuilder, private teamsService: TeamsService) {
-    this.form = this.fb.group({
-      shortname: ['', Validators.required],
-      fullname: ['', Validators.required],
-      color: ['', Validators.required]
-    });
-
-    this.form.statusChanges.subscribe(() => {
-      this.validChange.emit(this.form.valid);
-    });
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['row'] && this.row) {
-      this.form.patchValue(this.row);
-      this.validChange.emit(this.form.valid);
-    }
-  }
-
-  ngAfterViewInit() {
-    this.form.markAllAsTouched();
-  }
-}

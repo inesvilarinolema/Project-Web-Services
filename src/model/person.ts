@@ -1,11 +1,12 @@
-import { HttpError } from "../helpers/errorhandling";
+import { HttpError } from "../helpers/errors";
 
-// schema for a person
+// schema for a person; because of the usage scope, the constructor is also validator, raises HttpError
 export class Person {
   id: number;
   firstname: string;
   lastname: string;
   birthdate: Date;
+  team_ids?: number[];
 
   constructor(firstname: string, lastname: string, birthdate: Date) {
     if (!firstname || typeof firstname !== 'string' || firstname.trim().length === 0)

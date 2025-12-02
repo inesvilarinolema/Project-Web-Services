@@ -1,0 +1,29 @@
+.clickable-row:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+}
+
+.team {
+  // margin-right: 4px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.no-teams {
+  font-style: italic;
+  font-size: smaller;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.centered {
+  text-align: center;
+}
+
+.avatar-image {
+  border-radius: 50%;
+  object-fit: cover;
+  width: 32px;
+  height: 32px;
+}

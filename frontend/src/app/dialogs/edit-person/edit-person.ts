@@ -1,37 +1,37 @@
 import { Component, Inject, ViewChild } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { TeamFormComponent } from '../components/team-form';
-import { Team } from '../models/team';
-import { TeamsService } from '../services/teams';
+import { PersonFormComponent } from '../../components/person-form/person-form';
+import { Person } from '../../models/person';
+import { PersonsService } from '../../services/persons';
 
 @Component({
-  selector: 'edit-team',
+  selector: 'edit-person',
   standalone: true,
-  imports: [ MatDialogModule, TeamFormComponent ],
-  templateUrl: './edit-team.html',
-  styleUrls: ['./edit-team.scss']
+  imports: [ MatDialogModule, PersonFormComponent ],
+  templateUrl: './edit-person.html',
+  styleUrls: ['./edit-person.scss']
 })
-export class EditTeamDialog {
+export class EditPersonDialog {
 
-    @ViewChild(TeamFormComponent) teamForm!: TeamFormComponent;
+    @ViewChild(PersonFormComponent) personForm!: PersonFormComponent;
 
     formValid: boolean = false;
 
     constructor(
         private snackBar: MatSnackBar,
-        private dialogRef: MatDialogRef<EditTeamDialog>,
-        private teamsService: TeamsService,
-        @Inject(MAT_DIALOG_DATA) public data: { row: Team }
+        private dialogRef: MatDialogRef<EditPersonDialog>,
+        private personsService: PersonsService,
+        @Inject(MAT_DIALOG_DATA) public data: { row: Person }
     ) {}
 
     onAdd(): void {
-        if (this.teamForm.form.valid) {
-            const newTeam: Team = this.teamForm.form.value;
-            this.teamsService.newTeam(newTeam).subscribe({
-                next: team => {
-                    this.teamsService.notifyReload(); // notify other components to reload the list
-                    this.snackBar.open(`Team ${team.id} added`, 'Close', {
+        if (this.personForm.form.valid) {
+            const newPerson: Person = this.personForm.form.value;
+            this.personsService.newPerson(newPerson).subscribe({
+                next: person => {
+                    this.personsService.notifyReload(); // notify other components to reload the list
+                    this.snackBar.open(`Person ${person.id} added`, 'Close', {
                         duration: 5000,
                         panelClass: ['snackbar-success']
                     });
@@ -48,13 +48,13 @@ export class EditTeamDialog {
     }
 
     onModify(): void {
-        if (this.teamForm.form.valid) {
-            const updatedTeam: Team = this.teamForm.form.value;
-            updatedTeam.id = this.data.row.id;
-            this.teamsService.modifyTeam(updatedTeam).subscribe({
-                next: team => {
-                    this.teamsService.notifyReload(); // notify
-                    this.snackBar.open(`Team ${team.id} modified`, 'Close', {
+        if (this.personForm.form.valid) {
+            const updatedPerson: Person = this.personForm.form.value;
+            updatedPerson.id = this.data.row.id;
+            this.personsService.modifyPerson(updatedPerson).subscribe({
+                next: person => {
+                    this.personsService.notifyReload(); // notify
+                    this.snackBar.open(`Person ${person.id} modified`, 'Close', {
                         duration: 5000,
                         panelClass: ['snackbar-success']
                     });
@@ -71,10 +71,10 @@ export class EditTeamDialog {
     }
 
     onDelete() {
-        this.teamsService.deleteTeam(this.data.row.id).subscribe({
-            next: team => {
-                this.teamsService.notifyReload(); // notify other components to reload the list
-                this.snackBar.open(`Team ${team.id} deleted`, 'Close', {
+        this.personsService.deletePerson(this.data.row.id).subscribe({
+            next: person => {
+                this.personsService.notifyReload(); // notify other components to reload the list
+                this.snackBar.open(`Person ${person.id} deleted`, 'Close', {
                     duration: 5000,
                     panelClass: ['snackbar-success']
                 });

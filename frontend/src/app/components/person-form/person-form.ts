@@ -7,9 +7,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatSelectModule } from '@angular/material/select';
 
-import { Person } from '../models/person'
-import { Team } from '../models/team';
-import { TeamsService } from '../services/teams';
+import { Person } from '../../models/person'
+import { TeamsService } from '../../services/teams';
+import { Team } from '../../models/team';
 
 @Component({
   selector: 'person-form',
@@ -30,7 +30,7 @@ export class PersonFormComponent {
       firstname: ['', Validators.required],
       lastname: ['', Validators.required],
       birthdate: [null, Validators.required],
-      team_ids: [[]]
+      team_ids: [[], null]
     });
 
     this.form.statusChanges.subscribe(() => {

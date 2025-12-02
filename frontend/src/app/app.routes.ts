@@ -13,3 +13,4 @@ export const routes: AppRoute[] = [
   { path: 'persons', component: PersonsPage, title: 'Persons', icon: 'person', roles: [0,1] },
   { path: 'teams', component: TeamsPage, title: 'Teams', icon: 'groups', roles: [0,1] }
 ];
+

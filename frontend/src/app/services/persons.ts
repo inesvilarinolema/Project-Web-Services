@@ -17,8 +17,8 @@ export class PersonsService {
 
   constructor(private http: HttpClient) {}
 
-  getPersons(filter: string = '', limit = ''): Observable<Person[]> {
-    const params = new HttpParams().set('filter', filter).set('limit', limit);
+  getPersons(filter: string = '', limit: number = 10): Observable<Person[]> {
+    const params = new HttpParams().set('q', filter).set('limit', limit); // add query parameters
     return this.http.get<Person[]>(this.apiUrl, { params });
   }
 
@@ -31,7 +31,7 @@ export class PersonsService {
   }
 
   deletePerson(id: number): Observable<Person> {
-    const params = new HttpParams().set('id', id);
+    const params = new HttpParams().set('id', id); // pass id as query parameter
     return this.http.delete<Person>(this.apiUrl, { params });
   }
 

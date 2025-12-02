@@ -5,11 +5,11 @@ import { Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Team } from '../models/team'
-import { TeamsService } from '../services/teams';
-import { EditTeamDialog } from '../dialogs/edit-team';
-import { User } from '../models/user';
-import { AuthService } from '../services/auth';
+
+import { Team } from '../../models/team'
+import { TeamsService } from '../../services/teams';
+import { EditTeamDialog } from '../../dialogs/edit-team/edit-team';
+import { ColorsService } from '../../services/colors';
 
 @Component({
   selector: 'teams-table',
@@ -19,18 +19,18 @@ import { AuthService } from '../services/auth';
   standalone: true
 })
 export class TeamsTableComponent {
-  displayedColumns: string[] = ['id', 'fullname', 'color'];
+  displayedColumns: string[] = ['id', 'name', 'longname', 'avatar', 'member_count'];
   teams: Team[] = [];
   private sub?: Subscription;
-  user: User | null = null;
+  getContrastColor: (color: string) => string;
 
   @Input() filter: string = '';
   @Input() limit: string = '';
 
-  constructor(private teamsService: TeamsService, private dialog: MatDialog, private snackBar: MatSnackBar, private authService: AuthService) {
-    this.authService.currentUser$.subscribe(user => { this.user = user});
+  constructor(private colorsService: ColorsService, private teamsService: TeamsService, private dialog: MatDialog, private snackBar: MatSnackBar) {
+    this.getContrastColor = this.colorsService.getContrastColor;    
   }
-
+  
   ngOnInit() {
     this.sub = this.teamsService.reload$.subscribe(() => this.loadData());
   }
@@ -48,7 +48,6 @@ export class TeamsTableComponent {
   }
 
   openDialog(row: Team | null) {
-      if(!this.isInRole([0])) return;
       const dialogRef = this.dialog.open(EditTeamDialog, {
         width: '75%',
         data: { row }
@@ -57,9 +56,5 @@ export class TeamsTableComponent {
 
   ngOnDestroy() {
     this.sub?.unsubscribe();
-  }
-
-  isInRole(roles: number[]) {
-    return this.authService.isInRole(this.user, roles);
   }
 }

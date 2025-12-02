@@ -6,11 +6,9 @@ import { MatInputModule } from '@angular/material/input';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime } from 'rxjs';
 
-import { TeamsTableComponent } from '../../components/teams-table';
-import { EditTeamDialog } from '../../dialogs/edit-team';
+import { TeamsTableComponent } from '../../components/teams-table/teams-table';
+import { EditTeamDialog } from '../../dialogs/edit-team/edit-team';
 import { TeamsService } from '../../services/teams';
-import { AuthService } from '../../services/auth';
-import { User } from '../../models/user';
 
 @Component({
     selector: 'teams-page',
@@ -22,10 +20,8 @@ import { User } from '../../models/user';
 export class TeamsPage {
     filterControl = new FormControl('');
     limitControl = new FormControl('10');
-    user: User | null = null;
 
-    constructor(private dialog: MatDialog, private teamsService: TeamsService, private authService: AuthService) {
-        this.authService.currentUser$.subscribe(user => { this.user = user});
+    constructor(private dialog: MatDialog, private teamsService: TeamsService) {
         this.filterControl.valueChanges.
             pipe(debounceTime(200)).
             subscribe(value => {
@@ -43,9 +39,5 @@ export class TeamsPage {
             width: '75%',
             data: { row: null }
         });
-    }
-
-    isInRole(roles: number[]) {
-        return this.authService.isInRole(this.user, roles);
     }
 }
