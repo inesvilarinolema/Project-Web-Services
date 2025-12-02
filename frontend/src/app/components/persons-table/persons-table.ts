@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, Input, ViewChild, OnDestroy } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, ViewChild, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -33,6 +33,8 @@ export class PersonsTableComponent implements AfterViewInit, OnDestroy {
     }
   } // set private component _filter if parent component changes value of filter
 
+  @Output() countsChange = new EventEmitter<{ total: number, filtered: number }>();
+  
   @ViewChild('tableContainer') tableContainer!: ElementRef<HTMLDivElement>;
 
   getContrastColor: (color: string) => string;
@@ -41,7 +43,7 @@ export class PersonsTableComponent implements AfterViewInit, OnDestroy {
   allLoaded: boolean = false;
   offset: number = 0;
   limit: number = 10;
-
+  
   @ViewChild('loadMore') loadMore!: ElementRef;
 
   constructor(
@@ -107,12 +109,15 @@ export class PersonsTableComponent implements AfterViewInit, OnDestroy {
     this.loading = true;
 
     this.personsService.getPersons(this._filter, this.limit, this.offset)
-      .subscribe(res => {
-        if (res.length < this.limit) {
+      .subscribe(response => {
+        this.countsChange.emit({ total: response.total, filtered: response.filtered }); // send changed counters to parent
+        const persons = response.persons;
+
+        if (persons.length < this.limit) {
           this.allLoaded = true;
         }
 
-        this.persons = [...this.persons, ...res];
+        this.persons = [...this.persons, ...persons];
         this.offset += this.limit;
         this.loading = false;
 

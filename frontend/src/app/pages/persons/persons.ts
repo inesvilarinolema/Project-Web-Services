@@ -5,6 +5,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { MatBadgeModule } from '@angular/material/badge';
 
 import { PersonsTableComponent } from '../../components/persons-table/persons-table';
 import { EditPersonDialog } from '../../dialogs/edit-person/edit-person';
@@ -15,7 +16,11 @@ import { AuthService } from '../../services/auth';
 
 @Component({
     selector: 'persons-page',
-    imports: [MatButtonModule, MatInputModule, MatSelectModule, FormsModule, MatIconModule, ReactiveFormsModule, PersonsTableComponent],
+    imports: [
+        MatButtonModule, MatInputModule, MatSelectModule,MatIconModule, MatBadgeModule, 
+        FormsModule, ReactiveFormsModule, 
+        PersonsTableComponent
+    ],
     templateUrl: './persons.html',
     styleUrls: ['./persons.scss'],
     standalone: true
@@ -23,6 +28,8 @@ import { AuthService } from '../../services/auth';
 export class PersonsPage {
     filterControl = new FormControl('');
     user: User | null = null;
+    total: number = 0;
+    filtered: number = 0;
     
     constructor(private authService: AuthService, private personsService: PersonsService, private dialog: MatDialog) {
         this.authService.currentUser$.subscribe(user => { this.user = user });
@@ -46,5 +53,10 @@ export class PersonsPage {
 
     isInRole(roles: number[]) {
            return this.authService.isInRole(this.user, roles);
+    }
+
+    onCountsChange(counts: { total: number, filtered: number }) {
+        this.total = counts.total;
+        this.filtered = counts.filtered;
     }
 }

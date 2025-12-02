@@ -35,6 +35,8 @@ personsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) 
   const sqlParams: any[] = [];
 
   const q = req.query.q as string;
+  const { total } = await db.connection!.get("SELECT COUNT(1) AS total FROM persons");
+  let filtered = total;
   if (q) { // filter query provided
     let concat = Object.entries(personTableDef.columns).map(([name, def]) => {
       if (def.type === 'DATE') {
@@ -44,8 +46,11 @@ personsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) 
       return `COALESCE(${personTableDef.name}.${name},'')`; // coalesce is needed to protect against potential null-values
     }).join(" || ' ' || ");
     concat += " || ' ' || COALESCE(team_objects,'')";
-    query += ' WHERE ' + concat + ' LIKE ?';
+    let selection = ' WHERE ' + concat + ' LIKE ?';
+    query += selection;
     sqlParams.push(`%${q.replace(/'/g, "''")}%`);
+    const row  = await db.connection!.get(`SELECT COUNT(1) AS filtered FROM (${query}) f`, sqlParams);
+    filtered = row.filtered;
   }
   const order = parseInt(req.query.order as string, 10);
   if (order > 0 && order <= Object.keys(personTableDef.columns).length) { // order column provided; order cannot be parameterized
@@ -63,16 +68,17 @@ personsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) 
     query += ' OFFSET ?';
     sqlParams.push(offset);
   }
-  const persons = await db!.connection!.all(query, sqlParams);
-  res.json(persons?.map(p => ({ ...p, team_objects: JSON.parse(p.team_objects)})));
+  const persons = (await db!.connection!.all(query, sqlParams))!.map(p => ({ ...p, team_objects: JSON.parse(p.team_objects)}));
+  const response = { total, filtered, persons };
+  res.json(response);
 });
 
 // helper to set membership for a person
 async function setMembership(person_id: number, team_ids: number[]) {
-    await db!.connection!.run('DELETE FROM memberships WHERE person_id=?', person_id);
-    for(const team_id of team_ids) {
-        await db!.connection!.run('INSERT INTO memberships (person_id, team_id) VALUES (?, ?)', person_id, team_id);
-    }
+  await db!.connection!.run('DELETE FROM memberships WHERE person_id=?', person_id);
+  for(const team_id of team_ids) {
+    await db!.connection!.run('INSERT INTO memberships (person_id, team_id) VALUES (?, ?)', person_id, team_id);
+  }
 }
 
 personsRouter.post('/', requireRole([0]), async (req: Request, res: Response) => {
@@ -85,7 +91,7 @@ personsRouter.post('/', requireRole([0]), async (req: Request, res: Response) =>
     const addedPerson = await db!.connection!.get('INSERT INTO persons (firstname, lastname, birthdate) VALUES (?, ?, ?) RETURNING *',
       newPerson.firstname, newPerson.lastname, newPerson.birthdate
     );
-    await setMembership(newPerson.id, newPerson.team_ids);
+    await setMembership(addedPerson.id, newPerson.team_ids);
     await db!.connection!.exec('COMMIT');
     res.json(addedPerson);
   } catch (error: Error | any) {
@@ -109,7 +115,7 @@ personsRouter.put('/', requireRole([0]), async (req: Request, res: Response) => 
       personToUpdate.firstname, personToUpdate.lastname, personToUpdate.birthdate, personToUpdate.id
     );
     if (updatedPerson) {
-      await setMembership(personToUpdate.id, personToUpdate.team_ids);
+      await setMembership(updatedPerson.id, personToUpdate.team_ids);
       await db!.connection!.exec('COMMIT');
       res.json(updatedPerson); // return the updated person
     } else {
@@ -118,7 +124,8 @@ personsRouter.put('/', requireRole([0]), async (req: Request, res: Response) => 
     }
   } catch (error: Error | any) {
     await db!.connection!.exec('ROLLBACK');
-    throw new HttpError(400, 'Cannot update person');  }
+    throw new HttpError(400, 'Cannot update person');  
+  }
 });
 
 personsRouter.delete('/', requireRole([0]), async (req: Request, res: Response) => {

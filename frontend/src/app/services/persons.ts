@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 
 import { Person } from '../models/person';
+import { PersonsResponse } from '../models/personsResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -17,9 +18,9 @@ export class PersonsService {
 
   constructor(private http: HttpClient) {}
 
-  getPersons(filter: string = '', limit: number = 10, offset: number = 0): Observable<Person[]> {
+  getPersons(filter: string = '', limit: number = 10, offset: number = 0): Observable<PersonsResponse> {
     const params = new HttpParams().set('q', filter).set('limit', limit).set('offset', offset); // add query parameters
-    return this.http.get<Person[]>(this.apiUrl, { params });
+    return this.http.get<PersonsResponse>(this.apiUrl, { params });
   }
 
   newPerson(person: Person): Observable<Person> {
