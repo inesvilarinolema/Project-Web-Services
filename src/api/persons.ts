@@ -80,12 +80,12 @@ personsRouter.post('/', requireRole([0]), async (req: Request, res: Response) =>
     const addedPerson = await db!.connection!.get('INSERT INTO persons (firstname, lastname, birthdate) VALUES (?, ?, ?) RETURNING *',
       newPerson.firstname, newPerson.lastname, newPerson.birthdate
     );
-    await setMembership(newPerson.id, newPerson.team_ids);
+    await setMembership(addedPerson.id, newPerson.team_ids);
     await db!.connection!.exec('COMMIT');
     res.json(addedPerson);
   } catch (error: Error | any) {
     await db!.connection!.exec('ROLLBACK');
-    throw new HttpError(400, 'Cannot add person'); // bad request; validation or database error
+    throw new HttpError(400, 'Cannot add person ' + error.message); // bad request; validation or database error
   }
 });
 
