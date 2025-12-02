@@ -73,6 +73,7 @@ export class PersonsTableComponent implements AfterViewInit, OnDestroy {
     });
     dialogRef.afterClosed().subscribe(result => {
       if(result) {
+        this.resetAndLoad();
         this.tableContainer!.nativeElement.scrollTop = scrollTop;
       }
     })
