@@ -3,6 +3,8 @@ import { Router, Request, Response } from 'express';
 // @ts-ignore: Ignore missing types for formidable
 import formidable, { File } from 'formidable';
 
+import { requireRole } from './auth';
+
 export const uploadRouter = Router();
 
 const uploadDir = process.env.UPLOADSDIR || './uploads';
@@ -24,7 +26,7 @@ function sanitizeFilename(name: string): string {
 }
 
 // POST /api/upload
-uploadRouter.post('/', async (req: Request, res: Response) => {
+uploadRouter.post('/', requireRole([0]), async (req: Request, res: Response) => {
   const form = formidable({
     uploadDir,            // Directory where files are saved
     keepExtensions: true, // Preserve file extensions

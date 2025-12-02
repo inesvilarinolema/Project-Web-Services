@@ -3,11 +3,12 @@ import { Router, Request, Response } from "express";
 import { HttpError } from "../helpers/errors";
 import { db, personTableDef } from "../helpers/db";
 import { Person } from "../model/person";
+import { requireRole } from "../helpers/auth";
 
 export const personsRouter = Router();
 
 // persons endpoints
-personsRouter.get('/', async (req: Request, res: Response) => {
+personsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) => {
   let query = `
     SELECT
       id, firstname, lastname, birthdate,
@@ -69,7 +70,7 @@ async function setMembership(person_id: number, team_ids: number[]) {
     }
 }
 
-personsRouter.post('/', async (req: Request, res: Response) => {
+personsRouter.post('/', requireRole([0]), async (req: Request, res: Response) => {
   const { firstname, lastname, birthdate, team_ids } = req.body; // assume body has correct shape so name is present
   await db!.connection!.exec('BEGIN IMMEDIATE'); // start transaction
   try {
@@ -88,7 +89,7 @@ personsRouter.post('/', async (req: Request, res: Response) => {
   }
 });
 
-personsRouter.put('/', async (req: Request, res: Response) => {
+personsRouter.put('/', requireRole([0]), async (req: Request, res: Response) => {
   const { id, firstname, lastname, birthdate, team_ids } = req.body;
   if (typeof id !== 'number' || id <= 0) {
     throw new HttpError(400, 'ID was not provided correctly');
@@ -115,7 +116,7 @@ personsRouter.put('/', async (req: Request, res: Response) => {
     throw new HttpError(400, 'Cannot update person');  }
 });
 
-personsRouter.delete('/', async (req: Request, res: Response) => {
+personsRouter.delete('/', requireRole([0]), async (req: Request, res: Response) => {
   const id = parseInt(req.query.id as string, 10);
   if (isNaN(id) || id <= 0) {
     throw new HttpError(400, 'Cannot delete person');  

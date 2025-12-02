@@ -4,11 +4,12 @@ import { HttpError } from "../helpers/errors";
 import { db, teamTableDef } from "../helpers/db";
 import { Team } from "../model/team";
 import { deleteUploadedFile } from "../helpers/fileupload";
+import { requireRole } from "../helpers/auth";
 
 export const teamsRouter = Router();
 
 // teams endpoints
-teamsRouter.get('/', async (req: Request, res: Response) => {
+teamsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) => {
   let query = `
     SELECT
       id, name, longname, color, has_avatar,
@@ -51,7 +52,7 @@ teamsRouter.get('/', async (req: Request, res: Response) => {
   res.json(teams);
 });
 
-teamsRouter.post('/', async (req: Request, res: Response) => {
+teamsRouter.post('/', requireRole([0]), async (req: Request, res: Response) => {
   const { name, longname, color, has_avatar } = req.body; // assume body has correct shape so name is present
   try {
     const newTeam = new Team(name, longname, color, has_avatar);
@@ -64,7 +65,7 @@ teamsRouter.post('/', async (req: Request, res: Response) => {
   }
 });
 
-teamsRouter.put('/', async (req: Request, res: Response) => {
+teamsRouter.put('/', requireRole([0]), async (req: Request, res: Response) => {
   const { id, name, longname, color, has_avatar } = req.body;
   try {
     if (typeof id !== 'number' || id <= 0) {
@@ -88,7 +89,7 @@ teamsRouter.put('/', async (req: Request, res: Response) => {
   }
 });
 
-teamsRouter.delete('/', async (req: Request, res: Response) => {
+teamsRouter.delete('/', requireRole([0]), async (req: Request, res: Response) => {
   const id = parseInt(req.query.id as string, 10);
   if (isNaN(id) || id <= 0) {
     throw new HttpError(404, 'Cannot delete team');
