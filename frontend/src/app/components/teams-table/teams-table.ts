@@ -5,17 +5,20 @@ import { Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 import { Team } from '../../models/team'
 import { TeamsService } from '../../services/teams';
 import { EditTeamDialog } from '../../dialogs/edit-team/edit-team';
 import { ColorsService } from '../../services/colors';
+import { User } from '../../models/user';
+import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'teams-table',
   templateUrl: './teams-table.html',
   styleUrls: ['./teams-table.scss'],
-  imports: [CommonModule, MatTableModule, MatChipsModule],
+  imports: [CommonModule, MatTableModule, MatChipsModule, MatProgressSpinner],
   standalone: true
 })
 export class TeamsTableComponent {
@@ -23,11 +26,14 @@ export class TeamsTableComponent {
   teams: Team[] = [];
   private sub?: Subscription;
   getContrastColor: (color: string) => string;
+  user: User | null = null;
+  loading: boolean = false;
 
   @Input() filter: string = '';
   @Input() limit: string = '';
 
-  constructor(private colorsService: ColorsService, private teamsService: TeamsService, private dialog: MatDialog, private snackBar: MatSnackBar) {
+  constructor(private authService: AuthService, private colorsService: ColorsService, private teamsService: TeamsService, private dialog: MatDialog, private snackBar: MatSnackBar) {
+    this.authService.currentUser$.subscribe(user => { this.user = user });
     this.getContrastColor = this.colorsService.getContrastColor;    
   }
   
@@ -36,9 +42,14 @@ export class TeamsTableComponent {
   }
 
   loadData() {
+    this.loading = true;
     this.teamsService.getTeams(this.filter, this.limit).subscribe({
-      next: (data) => (this.teams = data),
+      next: (data) => {
+        this.loading = false;
+        this.teams = data
+      },
       error: (err) => {
+        this.loading = false;
         this.snackBar.open(err?.error?.message ?? err?.message ?? 'Unknown error', 'Close', {
                         duration: 5000,
                         panelClass: ['snackbar-error']
@@ -48,6 +59,7 @@ export class TeamsTableComponent {
   }
 
   openDialog(row: Team | null) {
+    if (!this.isInRole([0])) return;
       const dialogRef = this.dialog.open(EditTeamDialog, {
         width: '75%',
         data: { row }
@@ -56,5 +68,9 @@ export class TeamsTableComponent {
 
   ngOnDestroy() {
     this.sub?.unsubscribe();
+  }
+
+  isInRole(roles: number[]) {
+    return this.authService.isInRole(this.user, roles);
   }
 }
