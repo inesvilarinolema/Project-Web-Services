@@ -58,6 +58,11 @@ personsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) 
     query += ' LIMIT ?';
     sqlParams.push(limit);
   }
+  const offset = parseInt(req.query.offset as string, 0);
+  if (!isNaN(offset)) { // limit provided
+    query += ' OFFSET ?';
+    sqlParams.push(offset);
+  }
   const persons = await db!.connection!.all(query, sqlParams);
   res.json(persons?.map(p => ({ ...p, team_objects: JSON.parse(p.team_objects)})));
 });

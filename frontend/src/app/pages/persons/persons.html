@@ -11,19 +11,12 @@
 
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>Filter</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
         <input matInput [formControl]="filterControl" placeholder="Filter"/>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="limit-field">
-        <mat-label>Limit</mat-label>
-        <mat-select [formControl]="limitControl">
-          @for(n of [10,20,100,1000]; track n) {
-            <mat-option [value]="n">{{ n }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
     </div>
 
-    <persons-table [filter]="filterControl.value || ''" [limit]="limitControl.value || 10"></persons-table>
+    <persons-table [filter]="filterControl.value || ''"></persons-table>
   </div>
 }

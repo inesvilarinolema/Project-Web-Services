@@ -3,7 +3,7 @@ import { Router, RouterModule } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 
 import { APP_VERSION } from '../../../src/shared/version';
@@ -15,7 +15,7 @@ import { LoginDialog } from './dialogs/login/login';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterModule, MatToolbarModule, MatButtonModule, MatIconModule, MatProgressSpinner],
+  imports: [RouterModule, MatToolbarModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
   templateUrl: './app.html',
   styleUrls: ['./app.scss']
 })
