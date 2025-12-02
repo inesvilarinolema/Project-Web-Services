@@ -1,10 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, Input, ViewChild, NgZone, OnInit, OnDestroy } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, ViewChild, OnDestroy } from '@angular/core';
 import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
-import { Subscription } from 'rxjs';
 
 import { Person } from '../../models/person';
 import { PersonsService } from '../../services/persons';
@@ -20,10 +19,9 @@ import { AuthService } from '../../services/auth';
   imports: [CommonModule, MatTableModule, MatChipsModule, MatProgressSpinnerModule],
   standalone: true
 })
-export class PersonsTableComponent implements OnInit, AfterViewInit, OnDestroy {
+export class PersonsTableComponent implements AfterViewInit, OnDestroy {
   displayedColumns: string[] = ['id', 'firstname', 'lastname', 'birthdate', 'teams'];
   persons: Person[] = [];
-  private sub?: Subscription;
   private observer?: IntersectionObserver;
 
   private _filter: string = '';
@@ -33,35 +31,27 @@ export class PersonsTableComponent implements OnInit, AfterViewInit, OnDestroy {
       this._filter = value;
       this.resetAndLoad();
     }
-  }
-  get filter(): string {
-    return this._filter;
-  }
+  } // set private component _filter if parent component changes value of filter
+
+  @ViewChild('tableContainer') tableContainer!: ElementRef<HTMLDivElement>;
 
   getContrastColor: (color: string) => string;
   user: User | null = null;
   loading: boolean = false;
   allLoaded: boolean = false;
   offset: number = 0;
-  limit: number = 20;
+  limit: number = 10;
 
-  @ViewChild('loadMore', { static: false }) loadMore!: ElementRef;
+  @ViewChild('loadMore') loadMore!: ElementRef;
 
   constructor(
     private authService: AuthService,
     private colorsService: ColorsService,
     private personsService: PersonsService,
-    private dialog: MatDialog,
-    private ngZone: NgZone
+    private dialog: MatDialog
   ) {
     this.authService.currentUser$.subscribe(user => { this.user = user; });
     this.getContrastColor = this.colorsService.getContrastColor;
-  }
-
-  ngOnInit() {
-    this.sub = this.personsService.reload$.subscribe(() => {
-      this.resetAndLoad();
-    });
   }
 
   ngAfterViewInit() {
@@ -69,7 +59,6 @@ export class PersonsTableComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.sub?.unsubscribe();
     this.observer?.disconnect();
   }
 
@@ -77,21 +66,16 @@ export class PersonsTableComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.isInRole([0])) return;
     row!.team_ids = row?.team_objects?.map(team => team.id);
 
-    // remeber scroll position
-    const tableContainer = document.querySelector('.persons-table-container') as HTMLElement;
-    const scrollTop = tableContainer?.scrollTop || 0;
-
+    const scrollTop = this.tableContainer?.nativeElement.scrollTop || 0; // remember current position
     const dialogRef = this.dialog.open(EditPersonDialog, {
       width: '75%',
       data: { row }
     });
-
-    dialogRef.afterClosed().subscribe(() => {
-    // restore scroll position
-      setTimeout(() => {
-        if (tableContainer) tableContainer.scrollTop = scrollTop;
-      }, 0);
-    });      
+    dialogRef.afterClosed().subscribe(result => {
+      if(result) {
+        this.tableContainer!.nativeElement.scrollTop = scrollTop;
+      }
+    })
   }
 
   isInRole(roles: number[]) {
@@ -103,23 +87,16 @@ export class PersonsTableComponent implements OnInit, AfterViewInit, OnDestroy {
     this.offset = 0;
     this.allLoaded = false;
     this.loadData();
-
-    setTimeout(() => this.initObserver(), 0);
   }
 
   private initObserver() {
     if (!this.loadMore) return;
-
-    if (this.observer) {
-      this.observer.disconnect();
-    }
-
+    this.observer?.disconnect();
     this.observer = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting) {
-        this.ngZone.run(() => this.loadData());
+        this.loadData();
       }
     });
-
     this.observer.observe(this.loadMore.nativeElement);
   }
 
@@ -137,6 +114,19 @@ export class PersonsTableComponent implements OnInit, AfterViewInit, OnDestroy {
         this.persons = [...this.persons, ...res];
         this.offset += this.limit;
         this.loading = false;
+
+        this.checkFillViewport();
       });
   }
+
+  private checkFillViewport() {
+    requestAnimationFrame(() => {
+      if (!this.loadMore || this.allLoaded) return;
+      const rect = this.loadMore.nativeElement.getBoundingClientRect();
+      if (rect.top < window.innerHeight) {
+        // sentinel still visible - read more records
+        this.loadData();
+      }
+    });
+  }  
 }

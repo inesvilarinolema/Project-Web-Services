@@ -35,15 +35,16 @@ export class EditPersonDialog {
                         duration: 5000,
                         panelClass: ['snackbar-success']
                     });
+                    this.dialogRef.close(person.id);
                 },
                 error: err => {
                     this.snackBar.open(err?.error?.message ?? err?.message ?? 'Unknown error', 'Close', {
                         duration: 5000,
                         panelClass: ['snackbar-error']
                     });
+                    this.dialogRef.close(null);
                 }
             });
-            this.dialogRef.close();
         }
     }
 
@@ -58,15 +59,16 @@ export class EditPersonDialog {
                         duration: 5000,
                         panelClass: ['snackbar-success']
                     });
+                    this.dialogRef.close(person.id);
                 },
                 error: err => {
                     this.snackBar.open(err?.error?.message ?? err?.message ?? 'Unknown error', 'Close', {
                         duration: 5000,
                         panelClass: ['snackbar-error']
                     });
+                    this.dialogRef.close();
                 }
             });
-            this.dialogRef.close();
         }
     }
 
@@ -78,15 +80,16 @@ export class EditPersonDialog {
                     duration: 5000,
                     panelClass: ['snackbar-success']
                 });
+                this.dialogRef.close(person.id);
             },
             error: err => {
                 this.snackBar.open(err?.error?.message ?? err?.message ?? 'Unknown error', 'Close', {
                     duration: 5000,
                     panelClass: ['snackbar-error']
                 });
+                this.dialogRef.close();
             }
         });
-        this.dialogRef.close();
     }
 
     onFormValidChange(valid: boolean) {
