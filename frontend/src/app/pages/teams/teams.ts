@@ -21,17 +21,11 @@ import { AuthService } from '../../services/auth';
 })
 export class TeamsPage {
     filterControl = new FormControl('');
-    limitControl = new FormControl('10');
     user: User | null = null;
 
     constructor(private authService: AuthService, private dialog: MatDialog, private teamsService: TeamsService) {
         this.authService.currentUser$.subscribe(user => { this.user = user });
         this.filterControl.valueChanges.
-            pipe(debounceTime(200)).
-            subscribe(value => {
-                this.teamsService.notifyReload();
-            });
-        this.limitControl.valueChanges.
             pipe(debounceTime(200)).
             subscribe(value => {
                 this.teamsService.notifyReload();
@@ -42,6 +36,10 @@ export class TeamsPage {
         const dialogRef = this.dialog.open(EditTeamDialog, {
             width: '75%',
             data: { row: null }
+        });
+        dialogRef.afterClosed().subscribe(result => {
+            if(!result) return;
+            this.filterControl.patchValue(result + ' '); // display only record just added
         });
     }
     

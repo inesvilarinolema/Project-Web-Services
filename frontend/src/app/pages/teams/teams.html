@@ -10,17 +10,12 @@
         <div class="spacer"></div>
 
         <mat-form-field appearance="outline" class="filter-field">
-        <mat-icon matPrefix>search</mat-icon>
-        <mat-label>Filter</mat-label>
-        <input matInput [formControl]="filterControl" placeholder="filter"/>
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="filter-field">
-        <mat-icon matPrefix>numbers</mat-icon>
-        <mat-label>Limit</mat-label>
-        <input matInput type="number" [formControl]="limitControl" placeholder="limit"/>
+            <mat-icon matPrefix>search</mat-icon>
+            <mat-label>Filter</mat-label>
+            <input matInput [formControl]="filterControl" placeholder="filter"/>
         </mat-form-field>
     </div>
 
-        <teams-table [filter]="filterControl.value || ''" [limit]="limitControl.value || ''"></teams-table>
+        <teams-table [filter]="filterControl.value || ''"></teams-table>
     </div>
 }

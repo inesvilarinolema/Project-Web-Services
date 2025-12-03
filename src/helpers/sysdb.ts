@@ -21,7 +21,7 @@ export async function openDb(): Promise<Database> {
 export async function createIfNotExists(): Promise<void> {
     const { user_version } = await db.connection!.get('PRAGMA user_version;') // get current db version
     if(!user_version) { // fresh database
-  
+        await db.connection!.exec('PRAGMA user_version = 1;');
         const createUsersTable = `
             CREATE TABLE users (  
             id INTEGER PRIMARY KEY AUTOINCREMENT,

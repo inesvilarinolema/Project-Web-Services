@@ -9,7 +9,6 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatIcon } from '@angular/material/icon';
 
 import { Team } from '../../models/team';
-import { TeamsService } from '../../services/teams';
 import { COLORS } from '../../../../../src/shared/colors';
 
 @Component({
@@ -20,15 +19,16 @@ import { COLORS } from '../../../../../src/shared/colors';
   standalone: true
 })
 export class TeamFormComponent {
-  @Input() row!: Team;
+  @Input() row!: Team | null;
   @Output() validChange = new EventEmitter<boolean>();
   
   form: FormGroup;
   colors: String[] = COLORS;
   selectedFile?: File;
   avatarPreview: string | null = null;
+  timestamp = Date.now();
 
-  constructor(private fb: FormBuilder, private teamsService: TeamsService) {
+  constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
       name: ['', Validators.required],
       longname: ['', Validators.required],
@@ -69,9 +69,15 @@ export class TeamFormComponent {
     reader.readAsDataURL(file);
   }
 
-  clearAvatar() {
+  clearSelectedAvatar() {
     this.selectedFile = undefined;
     this.avatarPreview = null;
     this.form.patchValue({ avatar: '' });
+  }
+
+  clearExistingAvatar() {
+    if(this.row) {
+      this.row.has_avatar = false;
+    }
   }
 }

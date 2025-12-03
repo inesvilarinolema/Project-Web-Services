@@ -20,7 +20,7 @@ import { AuthService } from '../../services/auth';
   standalone: true
 })
 export class PersonsTableComponent implements AfterViewInit, OnDestroy {
-  displayedColumns: string[] = ['id', 'firstname', 'lastname', 'birthdate', 'teams'];
+  displayedColumns: string[] = ['id', 'firstname', 'lastname', 'birthdate', 'email', 'teams'];
   persons: Person[] = [];
   private observer?: IntersectionObserver;
 
@@ -43,7 +43,8 @@ export class PersonsTableComponent implements AfterViewInit, OnDestroy {
   allLoaded: boolean = false;
   offset: number = 0;
   limit: number = 10;
-  
+  timestamp = Date.now();
+
   @ViewChild('loadMore') loadMore!: ElementRef;
 
   constructor(
@@ -71,6 +72,7 @@ export class PersonsTableComponent implements AfterViewInit, OnDestroy {
     const scrollTop = this.tableContainer?.nativeElement.scrollTop || 0; // remember current position
     const dialogRef = this.dialog.open(EditPersonDialog, {
       width: '75%',
+      minWidth: '800px',
       data: { row }
     });
     dialogRef.afterClosed().subscribe(result => {
@@ -104,6 +106,7 @@ export class PersonsTableComponent implements AfterViewInit, OnDestroy {
   }
 
   loadData() {
+    this.timestamp = Date.now();
     if (this.loading || this.allLoaded) return;
 
     this.loading = true;

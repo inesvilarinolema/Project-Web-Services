@@ -8,8 +8,9 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatSelectModule } from '@angular/material/select';
 
 import { Person } from '../../models/person'
-import { TeamsService } from '../../services/teams';
 import { Team } from '../../models/team';
+import { TeamsService } from '../../services/teams';
+import { ColorsService } from '../../services/colors';
 
 @Component({
   selector: 'person-form',
@@ -22,25 +23,31 @@ export class PersonFormComponent {
   @Input() row!: Person;
   @Output() validChange = new EventEmitter<boolean>();
   
+  getContrastColor: (color: string) => string;
   form: FormGroup;
   teams: Team[] = [];
+  teamsMap: Record<number, Team> = {};
 
-  constructor(private fb: FormBuilder, private teamsService: TeamsService) {
+  constructor(private fb: FormBuilder, private teamsService: TeamsService, private colorsService: ColorsService) {
     this.form = this.fb.group({
       firstname: ['', Validators.required],
       lastname: ['', Validators.required],
       birthdate: [null, Validators.required],
+      email: [null, Validators.required],
       team_ids: [[], null]
     });
 
     this.form.statusChanges.subscribe(() => {
       this.validChange.emit(this.form.valid);
     });
+
+    this.getContrastColor = this.colorsService.getContrastColor;
   }
 
   ngOnInit() {
     this.teamsService.getTeams().subscribe(teams => {
       this.teams = teams;
+      this.teamsMap = Object.fromEntries(this.teams.map(t => [t.id, t]));
     })
   }
 

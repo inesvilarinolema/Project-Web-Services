@@ -17,7 +17,7 @@ export class TeamsService {
 
   constructor(private http: HttpClient) {}
 
-  getTeams(filter: string = '', limit = ''): Observable<Team[]> {
+  getTeams(filter: string = '', limit = 9999): Observable<Team[]> {
     const params = new HttpParams().set('filter', filter).set('limit', limit);
     return this.http.get<Team[]>(this.apiUrl, { params });
   }

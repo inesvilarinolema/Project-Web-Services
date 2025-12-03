@@ -24,7 +24,8 @@ export const personTableDef = {
     id: { type: 'INTEGER', primaryKey: true, autoincrement: true },
     firstname: { type: 'TEXT' },
     lastname: { type: 'TEXT' },
-    birthdate: { type: 'DATE' }
+    birthdate: { type: 'DATE' },
+    email: { type: 'TEXT' }
   }
 };
 
@@ -97,14 +98,19 @@ export async function createSchemaAndData(): Promise<void> {
     console.log('Persons table created');
     const personNum: number = parseInt(process.env.DBFAKEPERSONS || '1000');
     for(let i = 0; i < personNum; i++) {
+      const options = {
+        firstName: faker.person.firstName(),
+        lastName: faker.person.lastName()
+      }
       const fakePerson = new Person(
-        faker.person.firstName(),
-        faker.person.lastName(),
-        faker.date.birthdate({ min: 1950, max: 2020, mode: 'year' })
+        options.firstName,
+        options.lastName,
+        faker.date.birthdate({ min: 1950, max: 2007, mode: 'year' }),
+        faker.internet.email(options).toLowerCase()
       );
       await db.connection!.run(
-        'INSERT INTO persons (firstname, lastname, birthdate) VALUES (?, ?, ?)',
-        fakePerson.firstname, fakePerson.lastname, fakePerson.birthdate
+        'INSERT INTO persons (firstname, lastname, birthdate, email) VALUES (?, ?, ?, ?)',
+        fakePerson.firstname, fakePerson.lastname, fakePerson.birthdate, fakePerson.email
       );
     }
     console.log(`${personNum} fake persons data created`);    
@@ -127,7 +133,7 @@ export async function createSchemaAndData(): Promise<void> {
     const createMembershipsStatement = createTableStatement(membershipTableDef);
     await db.connection!.run(createMembershipsStatement);
     for(let membership of [
-      [1,1], [1,2], [2,1], [2,3], [3,1]
+      [1,1], [1,2], [2,1], [2,3], [3,1], [3,2], [3,3], [3,4], [4,1], [5,1]
     ]) {
       await db.connection!.run('INSERT INTO memberships (person_id, team_id) VALUES (?, ?)', ...membership);
     }

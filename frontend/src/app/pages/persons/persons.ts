@@ -43,12 +43,13 @@ export class PersonsPage {
     openDialog() {
         const dialogRef = this.dialog.open(EditPersonDialog, { // new person dialog
             width: '75%',
+            minWidth: '800px',
             data: { row: null }
         });
         dialogRef.afterClosed().subscribe(result => {
             if(!result) return;
             this.filterControl.patchValue(result + ' '); // display only record just added
-        })
+        });
     }
 
     isInRole(roles: number[]) {

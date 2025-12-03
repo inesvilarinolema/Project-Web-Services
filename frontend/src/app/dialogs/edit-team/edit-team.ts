@@ -37,15 +37,16 @@ export class EditTeamDialog {
                         duration: 5000,
                         panelClass: ['snackbar-success']
                     });
+                    this.dialogRef.close(team.id);
                 },
                 error: err => {
                     this.snackBar.open(err?.error?.message ?? err?.message ?? 'Unknown error', 'Close', {
                         duration: 5000,
                         panelClass: ['snackbar-error']
                     });
+                    this.dialogRef.close();
                 }
             });
-            this.dialogRef.close();
         }
     }
 
@@ -60,15 +61,16 @@ export class EditTeamDialog {
                         duration: 5000,
                         panelClass: ['snackbar-success']
                     });
+                    this.dialogRef.close(team.id);
                 },
                 error: err => {
                     this.snackBar.open(err?.error?.message ?? err?.message ?? 'Unknown error', 'Close', {
                         duration: 5000,
                         panelClass: ['snackbar-error']
                     });
+                    this.dialogRef.close();
                 }
             });
-            this.dialogRef.close();
         }
     }
 
@@ -80,15 +82,16 @@ export class EditTeamDialog {
                     duration: 5000,
                     panelClass: ['snackbar-success']
                 });
+                this.dialogRef.close(team.id);
             },
             error: err => {
                 this.snackBar.open(err?.error?.message ?? err?.message ?? 'Unknown error', 'Close', {
                     duration: 5000,
                     panelClass: ['snackbar-error']
                 });
+                this.dialogRef.close();
             }
         });
-        this.dialogRef.close();
     }
 
     onFormValidChange(valid: boolean) {

@@ -11,7 +11,7 @@ export const personsRouter = Router();
 personsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) => {
   let query = `
     SELECT
-      id, firstname, lastname, birthdate,
+      id, firstname, lastname, birthdate, email,
       (
         SELECT COALESCE(
           json_group_array(
@@ -64,7 +64,7 @@ personsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) 
     sqlParams.push(limit);
   }
   const offset = parseInt(req.query.offset as string, 0);
-  if (!isNaN(offset)) { // limit provided
+  if (!isNaN(offset)) { // offset provided
     query += ' OFFSET ?';
     sqlParams.push(offset);
   }
@@ -82,37 +82,37 @@ async function setMembership(person_id: number, team_ids: number[]) {
 }
 
 personsRouter.post('/', requireRole([0]), async (req: Request, res: Response) => {
-  const { firstname, lastname, birthdate, team_ids } = req.body; // assume body has correct shape so name is present
+  const { firstname, lastname, birthdate, email, team_ids } = req.body; // assume body has correct shape so name is present
   await db!.connection!.exec('BEGIN IMMEDIATE'); // start transaction
   try {
-    const newPerson = new Person(firstname, lastname, new Date(birthdate));
+    const newPerson = new Person(firstname, lastname, new Date(birthdate), email);
     // set team ids if provided
     newPerson.team_ids = Array.isArray(team_ids) ? team_ids : [];
-    const addedPerson = await db!.connection!.get('INSERT INTO persons (firstname, lastname, birthdate) VALUES (?, ?, ?) RETURNING *',
-      newPerson.firstname, newPerson.lastname, newPerson.birthdate
+    const addedPerson = await db!.connection!.get('INSERT INTO persons (firstname, lastname, birthdate, email) VALUES (?, ?, ?, ?) RETURNING *',
+      newPerson.firstname, newPerson.lastname, newPerson.birthdate, newPerson.email
     );
     await setMembership(addedPerson.id, newPerson.team_ids);
     await db!.connection!.exec('COMMIT');
     res.json(addedPerson);
   } catch (error: Error | any) {
     await db!.connection!.exec('ROLLBACK');
-    throw new HttpError(400, 'Cannot add person ' + error.message); // bad request; validation or database error
+    throw new HttpError(400, 'Cannot add person: ' + error.message); // bad request; validation or database error
   }
 });
 
 personsRouter.put('/', requireRole([0]), async (req: Request, res: Response) => {
-  const { id, firstname, lastname, birthdate, team_ids } = req.body;
+  const { id, firstname, lastname, birthdate, email, team_ids } = req.body;
   if (typeof id !== 'number' || id <= 0) {
     throw new HttpError(400, 'ID was not provided correctly');
   }
   await db!.connection!.exec('BEGIN IMMEDIATE'); // start transaction
   try {
-    const personToUpdate = new Person(firstname, lastname, new Date(birthdate));
+    const personToUpdate = new Person(firstname, lastname, new Date(birthdate), email);
     personToUpdate.id = id;  // retain the original id
     // set team ids if provided
     personToUpdate.team_ids = Array.isArray(team_ids) ? team_ids : [];
-    const updatedPerson = await db.connection?.get('UPDATE persons SET firstname = ?, lastname = ?, birthdate = ? WHERE id = ? RETURNING *',
-      personToUpdate.firstname, personToUpdate.lastname, personToUpdate.birthdate, personToUpdate.id
+    const updatedPerson = await db.connection?.get('UPDATE persons SET firstname = ?, lastname = ?, birthdate = ?, email = ? WHERE id = ? RETURNING *',
+      personToUpdate.firstname, personToUpdate.lastname, personToUpdate.birthdate, personToUpdate.email, personToUpdate.id
     );
     if (updatedPerson) {
       await setMembership(updatedPerson.id, personToUpdate.team_ids);
@@ -124,7 +124,7 @@ personsRouter.put('/', requireRole([0]), async (req: Request, res: Response) => 
     }
   } catch (error: Error | any) {
     await db!.connection!.exec('ROLLBACK');
-    throw new HttpError(400, 'Cannot update person');  
+    throw new HttpError(400, 'Cannot update person: ' + error.message);  
   }
 });
 
@@ -135,7 +135,7 @@ personsRouter.delete('/', requireRole([0]), async (req: Request, res: Response) 
   }
   await db!.connection!.exec('BEGIN IMMEDIATE'); // start transaction
   try {
-    await setMembership(id, []); // remove all memberships
+    // await setMembership(id, []); // remove all memberships
     const deletedPerson = await db!.connection!.get('DELETE FROM persons WHERE id = ? RETURNING *', id);
     if (deletedPerson) {
       await db!.connection!.exec('COMMIT');
@@ -146,6 +146,6 @@ personsRouter.delete('/', requireRole([0]), async (req: Request, res: Response) 
     }
   } catch (error: Error | any) {
     await db!.connection!.exec('ROLLBACK');
-    throw new HttpError(400, 'Cannot delete person');  
+    throw new HttpError(400, 'Cannot delete person: ' + error.message);  
   }
 });

@@ -23,23 +23,19 @@
       </td>
     </ng-container>
 
+    <ng-container matColumnDef="avatar">
+      <th mat-header-cell *matHeaderCellDef class="centered"> Avatar </th>
+      <td mat-cell *matCellDef="let team" class="centered">
+        @if (team.has_avatar) {
+          <img alt="avatar" [src]="'/uploads/avatar/' + team.id + '.png?' + timestamp" class="avatar-image"/>
+        }
+      </td>
+    </ng-container>
+
     <ng-container matColumnDef="longname">
       <th mat-header-cell *matHeaderCellDef> Long name </th>
       <td mat-cell *matCellDef="let team">
         {{ team.longname }}
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="avatar">
-      <th mat-header-cell *matHeaderCellDef> Avatar </th>
-      <td mat-cell *matCellDef="let team">
-        @if (team.has_avatar) {
-          <img
-            alt="avatar"
-            [src]="'/uploads/avatar/' + team.id + '.png'"
-            class="avatar-image" 
-          />
-        }
       </td>
     </ng-container>
 

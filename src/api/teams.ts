@@ -48,6 +48,11 @@ teamsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) =>
     query += ' LIMIT ?';
     sqlParams.push(limit);
   }
+  const offset = parseInt(req.query.offset as string, 0);
+  if (!isNaN(offset)) { // offset provided
+    query += ' OFFSET ?';
+    sqlParams.push(offset);
+  }
   const teams = await db!.connection!.all(query, sqlParams);
   res.json(teams);
 });
@@ -61,7 +66,7 @@ teamsRouter.post('/', requireRole([0]), async (req: Request, res: Response) => {
     );
     res.json(addedTeam); // return the newly created Team; alternatively, you may consider returning the full list of teams
   } catch (error: Error | any) {
-    throw new HttpError(400, 'Cannot add team'); // bad request; validation or database error
+    throw new HttpError(400, 'Cannot add team: ' + error.message); // bad request; validation or database error
   }
 });
 
@@ -85,14 +90,14 @@ teamsRouter.put('/', requireRole([0]), async (req: Request, res: Response) => {
       throw new HttpError(404, 'Team to update not found');
     }
   } catch (error: Error | any) {
-    throw new HttpError(400, 'Cannot update team');
+    throw new HttpError(400, 'Cannot update team: ' + error.message);
   }
 });
 
 teamsRouter.delete('/', requireRole([0]), async (req: Request, res: Response) => {
   const id = parseInt(req.query.id as string, 10);
   if (isNaN(id) || id <= 0) {
-    throw new HttpError(404, 'Cannot delete team');
+    throw new HttpError(404, 'ID was not provided correctly');
   }
   const deletedTeam = await db!.connection!.get('DELETE FROM teams WHERE id = ? RETURNING *', id);
   if (deletedTeam) {

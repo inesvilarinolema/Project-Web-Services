@@ -22,19 +22,19 @@ import { AuthService } from '../../services/auth';
   standalone: true
 })
 export class TeamsTableComponent {
-  displayedColumns: string[] = ['id', 'name', 'longname', 'avatar', 'member_count'];
+  displayedColumns: string[] = ['id', 'name', 'avatar', 'longname', 'member_count'];
   teams: Team[] = [];
   private sub?: Subscription;
   getContrastColor: (color: string) => string;
   user: User | null = null;
   loading: boolean = false;
+  timestamp = Date.now();
 
   @Input() filter: string = '';
-  @Input() limit: string = '';
-
+  
   constructor(private authService: AuthService, private colorsService: ColorsService, private teamsService: TeamsService, private dialog: MatDialog, private snackBar: MatSnackBar) {
     this.authService.currentUser$.subscribe(user => { this.user = user });
-    this.getContrastColor = this.colorsService.getContrastColor;    
+    this.getContrastColor = this.colorsService.getContrastColor;
   }
   
   ngOnInit() {
@@ -42,8 +42,9 @@ export class TeamsTableComponent {
   }
 
   loadData() {
+    this.timestamp = Date.now();
     this.loading = true;
-    this.teamsService.getTeams(this.filter, this.limit).subscribe({
+    this.teamsService.getTeams(this.filter).subscribe({
       next: (data) => {
         this.loading = false;
         this.teams = data
@@ -60,9 +61,9 @@ export class TeamsTableComponent {
 
   openDialog(row: Team | null) {
     if (!this.isInRole([0])) return;
-      const dialogRef = this.dialog.open(EditTeamDialog, {
-        width: '75%',
-        data: { row }
+    const dialogRef = this.dialog.open(EditTeamDialog, {
+      width: '75%',
+      data: { row }
     });
   }
 
