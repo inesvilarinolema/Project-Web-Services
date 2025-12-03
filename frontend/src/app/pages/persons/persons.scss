@@ -13,8 +13,11 @@
   flex: 1;
 }
 
-.controls-container .filter-field,
-.controls-container .limit-field {
-  width: 150px;
+.controls-container .filter-field {
+  width: 200px;
   margin-right: auto;
+}
+
+.badge-spacing {
+  margin-right: 2rem;
 }

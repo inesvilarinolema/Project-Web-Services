@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { Team } from '../../models/team'
 import { TeamsService } from '../../services/teams';
@@ -18,7 +18,7 @@ import { AuthService } from '../../services/auth';
   selector: 'teams-table',
   templateUrl: './teams-table.html',
   styleUrls: ['./teams-table.scss'],
-  imports: [CommonModule, MatTableModule, MatChipsModule, MatProgressSpinner],
+  imports: [CommonModule, MatTableModule, MatChipsModule, MatProgressSpinnerModule],
   standalone: true
 })
 export class TeamsTableComponent {
