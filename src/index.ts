@@ -4,8 +4,8 @@ import { config } from 'dotenv';
 
 import { APP_VERSION } from './shared/version';
 import { errorHandler } from './helpers/errors';
-import { db as sysdb, openDb as openSysDb, createIfNotExists } from './helpers/sysdb';
-import { openDb, db, createSchemaAndData } from './helpers/db';
+import { openDb as openSysDb } from './helpers/sysdb';
+import { openDb } from './helpers/db';
 import { authRouter, initAuth } from './helpers/auth';
 import { uploadRouter } from './helpers/fileupload';
 import { personsRouter } from './api/persons';
@@ -31,15 +31,15 @@ const apiUrl = process.env.APIURL || '/api';
 app.use(express.json());
 
 async function main() {
-  sysdb.connection = await openSysDb();
-  console.log('System database connected');
-  await createIfNotExists();
+  await openSysDb();
+  console.log('OK system database connected');
+
   await initAuth(app);
+  console.log('OK initialize authorization framework');
 
-  db.connection = await openDb();
-  console.log('Database connected');
-  await createSchemaAndData(); // create tables and initial data if needed; delete database file to recreate
-
+  await openDb();
+  console.log('OK main database connected');
+  
   // auth router
   app.use('/api/auth', authRouter);
   
@@ -61,5 +61,5 @@ async function main() {
 
 console.log(`Backend ${APP_VERSION} is starting...`);
 main().catch(err => {
-  console.error('Startup failed due to', err);
+  console.error('ERROR startup failed due to', err);
 })

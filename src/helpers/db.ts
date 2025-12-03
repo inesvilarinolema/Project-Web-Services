@@ -11,11 +11,18 @@ export const db: { connection: Database | null} = {
   connection: null
 };
 
-export async function openDb(): Promise<Database> {
-  return open({
+export async function openDb(): Promise<void> {
+  db.connection = await open({
     filename: process.env.DBFILE || './db/data.sqlite3',
     driver: sqlite3.Database
   });
+  const { user_version } = await db.connection.get('PRAGMA user_version;') // get current db version
+  if(!user_version) { // fresh database
+    await db.connection!.exec('PRAGMA user_version = 1;');
+    console.log('Reinitialize content...');
+    await createSchemaAndData();
+  }
+  await db.connection.exec('PRAGMA foreign_keys = ON'); // to enforce FOREIGN KEY constraints checking
 }
 
 export const personTableDef = {
@@ -86,57 +93,49 @@ function initials(name: string): string {
 }
 
 export async function createSchemaAndData(): Promise<void> {
-
-  const { user_version } = await db.connection!.get('PRAGMA user_version;') // get current db version
-  if(!user_version) { // fresh database
-
-    await db.connection!.exec('PRAGMA user_version = 1;'); // set db version to 1
-    await db.connection!.exec('PRAGMA foreign_keys = ON'); // to enforce FOREIGN KEY constraints checking
-
-    const createPersonsStatement = createTableStatement(personTableDef);
-    await db.connection!.run(createPersonsStatement);
-    console.log('Persons table created');
-    const personNum: number = parseInt(process.env.DBFAKEPERSONS || '1000');
-    for(let i = 0; i < personNum; i++) {
-      const options = {
-        firstName: faker.person.firstName(),
-        lastName: faker.person.lastName()
-      }
-      const fakePerson = new Person(
-        options.firstName,
-        options.lastName,
-        faker.date.birthdate({ min: 1950, max: 2007, mode: 'year' }),
-        faker.internet.email(options).toLowerCase()
-      );
-      await db.connection!.run(
-        'INSERT INTO persons (firstname, lastname, birthdate, email) VALUES (?, ?, ?, ?)',
-        fakePerson.firstname, fakePerson.lastname, fakePerson.birthdate, fakePerson.email
-      );
+  const createPersonsStatement = createTableStatement(personTableDef);
+  await db.connection!.run(createPersonsStatement);
+  console.log('Persons table created');
+  const personNum: number = parseInt(process.env.DBFAKEPERSONS || '1000');
+  for(let i = 0; i < personNum; i++) {
+    const options = {
+      firstName: faker.person.firstName(),
+      lastName: faker.person.lastName()
     }
-    console.log(`${personNum} fake persons data created`);    
-
-    const createTeamsStatement = createTableStatement(teamTableDef);
-    await db.connection!.run(createTeamsStatement);
-    console.log('Teams table created');
-    const teamsNum: number = parseInt(process.env.DBFAKETEAMS || '10') || 10;
-    for(let i = 0; i < teamsNum; i++) { 
-      const name = faker.company.name();
-      await db.connection!.run('INSERT INTO teams (name, longname, color, has_avatar) VALUES (?, ?, ?, ?)',
-        initials(name),
-        name,
-        COLORS[Math.floor(Math.random() * COLORS.length)],
-        0
-      );
-    }
-    console.log(`${teamsNum} fake teams data created`);
-
-    const createMembershipsStatement = createTableStatement(membershipTableDef);
-    await db.connection!.run(createMembershipsStatement);
-    for(let membership of [
-      [1,1], [1,2], [2,1], [2,3], [3,1], [3,2], [3,3], [3,4], [4,1], [5,1]
-    ]) {
-      await db.connection!.run('INSERT INTO memberships (person_id, team_id) VALUES (?, ?)', ...membership);
-    }
-    console.log('Memberships table created with sample data');
+    const fakePerson = new Person(
+      options.firstName,
+      options.lastName,
+      faker.date.birthdate({ min: 1950, max: 2007, mode: 'year' }),
+      faker.internet.email(options).toLowerCase()
+    );
+    await db.connection!.run(
+      'INSERT INTO persons (firstname, lastname, birthdate, email) VALUES (?, ?, ?, ?)',
+      fakePerson.firstname, fakePerson.lastname, fakePerson.birthdate, fakePerson.email
+    );
   }
+  console.log(`${personNum} fake persons data created`);    
+
+  const createTeamsStatement = createTableStatement(teamTableDef);
+  await db.connection!.run(createTeamsStatement);
+  console.log('Teams table created');
+  const teamsNum: number = parseInt(process.env.DBFAKETEAMS || '10') || 10;
+  for(let i = 0; i < teamsNum; i++) { 
+    const name = faker.company.name();
+    await db.connection!.run('INSERT INTO teams (name, longname, color, has_avatar) VALUES (?, ?, ?, ?)',
+      initials(name),
+      name,
+      COLORS[Math.floor(Math.random() * COLORS.length)],
+      0
+    );
+  }
+  console.log(`${teamsNum} fake teams data created`);
+
+  const createMembershipsStatement = createTableStatement(membershipTableDef);
+  await db.connection!.run(createMembershipsStatement);
+  for(let membership of [
+    [1,1], [1,2], [2,1], [2,3], [3,1], [3,2], [3,3], [3,4], [4,1], [5,1]
+  ]) {
+    await db.connection!.run('INSERT INTO memberships (person_id, team_id) VALUES (?, ?)', ...membership);
+  }
+  console.log('Memberships table created with sample data');
 }
