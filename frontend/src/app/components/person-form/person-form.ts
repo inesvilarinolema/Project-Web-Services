@@ -33,7 +33,7 @@ export class PersonFormComponent {
       firstname: ['', Validators.required],
       lastname: ['', Validators.required],
       birthdate: [null, Validators.required],
-      email: [null, Validators.required],
+      email: [null, [Validators.required, Validators.email]],
       team_ids: [[], null]
     });
 

@@ -78,7 +78,6 @@ export class PersonsTableComponent implements AfterViewInit, OnDestroy {
       data: { row }
     });
     dialogRef.afterClosed().subscribe(result => {
-      console.log('person', result);
       if(result) {
         this.timestamp = Date.now();
         this.resetAndLoad();

@@ -36,11 +36,11 @@
                     <mat-label>Email</mat-label>
                     <input matInput formControlName="email" placeholder="Email"/>
                     @if(form.get('email')?.invalid) {
-                        <mat-error>Email is required</mat-error>
+                        <mat-error>Email is invalid</mat-error>
                     }
                 </mat-form-field>    
 
-                <mat-form-field appearance="outline" class="flex-field">
+                <mat-form-field appearance="outline" class="flex-field-1-2">
                     <mat-label>Teams</mat-label>
                     <mat-select formControlName="team_ids" multiple>
                         <mat-select-trigger>
