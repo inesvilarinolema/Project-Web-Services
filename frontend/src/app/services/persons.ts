@@ -18,8 +18,8 @@ export class PersonsService {
 
   constructor(private http: HttpClient) {}
 
-  getPersons(filter: string = '', limit: number = 10, offset: number = 0): Observable<PersonsResponse> {
-    const params = new HttpParams().set('q', filter).set('limit', limit).set('offset', offset); // add query parameters
+  getPersons(filter: string = '', limit: number = 10, offset: number = 0, order: number = 0): Observable<PersonsResponse> {
+    const params = new HttpParams().set('q', filter).set('limit', limit).set('offset', offset).set('order', order); // add query parameters
     return this.http.get<PersonsResponse>(this.apiUrl, { params });
   }
 

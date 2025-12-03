@@ -42,7 +42,6 @@ export class TeamsTableComponent {
   }
 
   loadData() {
-    this.timestamp = Date.now();
     this.loading = true;
     this.teamsService.getTeams(this.filter).subscribe({
       next: (data) => {
@@ -64,6 +63,11 @@ export class TeamsTableComponent {
     const dialogRef = this.dialog.open(EditTeamDialog, {
       width: '75%',
       data: { row }
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if(result) {
+        this.timestamp = Date.now();
+      }
     });
   }
 

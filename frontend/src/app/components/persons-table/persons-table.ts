@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, Input, ViewChild, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { MatTableModule } from '@angular/material/table';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
@@ -16,7 +17,7 @@ import { AuthService } from '../../services/auth';
   selector: 'persons-table',
   templateUrl: './persons-table.html',
   styleUrls: ['./persons-table.scss'],
-  imports: [CommonModule, MatTableModule, MatChipsModule, MatProgressSpinnerModule],
+  imports: [CommonModule, MatTableModule, MatSortModule, MatChipsModule, MatProgressSpinnerModule],
   standalone: true
 })
 export class PersonsTableComponent implements AfterViewInit, OnDestroy {
@@ -43,6 +44,7 @@ export class PersonsTableComponent implements AfterViewInit, OnDestroy {
   allLoaded: boolean = false;
   offset: number = 0;
   limit: number = 10;
+  order: number = 1;
   timestamp = Date.now();
 
   @ViewChild('loadMore') loadMore!: ElementRef;
@@ -76,7 +78,9 @@ export class PersonsTableComponent implements AfterViewInit, OnDestroy {
       data: { row }
     });
     dialogRef.afterClosed().subscribe(result => {
+      console.log('person', result);
       if(result) {
+        this.timestamp = Date.now();
         this.resetAndLoad();
         this.tableContainer!.nativeElement.scrollTop = scrollTop;
       }
@@ -106,12 +110,11 @@ export class PersonsTableComponent implements AfterViewInit, OnDestroy {
   }
 
   loadData() {
-    this.timestamp = Date.now();
     if (this.loading || this.allLoaded) return;
 
     this.loading = true;
 
-    this.personsService.getPersons(this._filter, this.limit, this.offset)
+    this.personsService.getPersons(this._filter, this.limit, this.offset, this.order)
       .subscribe(response => {
         this.countsChange.emit({ total: response.total, filtered: response.filtered }); // send changed counters to parent
         const persons = response.persons;
@@ -137,5 +140,21 @@ export class PersonsTableComponent implements AfterViewInit, OnDestroy {
         this.loadData();
       }
     });
-  }  
+  }
+  
+  onSortChange(sort: Sort) {
+    const columnNo = parseInt(sort.active);
+    if(columnNo) {
+      switch(sort.direction) {
+        case 'asc':
+          this.order = columnNo;
+          this.resetAndLoad();
+          break;
+        case 'desc':
+          this.order = -columnNo;
+          this.resetAndLoad();
+          break;
+      }
+    }
+  }
 }
