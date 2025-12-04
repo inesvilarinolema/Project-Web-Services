@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,6 +11,28 @@ import { Person } from '../../models/person'
 import { Team } from '../../models/team';
 import { TeamsService } from '../../services/teams';
 import { ColorsService } from '../../services/colors';
+
+/*
+function validBirthdate(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    if(!control.value) return null;
+    const timestamp = new Date(control.value).getTime();
+    if(timestamp < new Date('1900-01-01').getTime() || timestamp > Date.now()) {
+      return { invalidDate: true };
+    } 
+    return null;
+  }
+}
+*/
+
+function validBirthdate(control: AbstractControl): ValidationErrors | null {
+  if(!control.value) return null;
+  const timestamp = new Date(control.value).getTime();
+  if(timestamp < new Date('1900-01-01').getTime() || timestamp > Date.now()) {
+    return { invalidDate: true };
+  } 
+  return null;
+}
 
 @Component({
   selector: 'person-form',
@@ -32,8 +54,8 @@ export class PersonFormComponent {
     this.form = this.fb.group({
       firstname: ['', Validators.required],
       lastname: ['', Validators.required],
-      birthdate: [null, Validators.required],
-      email: [null, [Validators.required, Validators.email]],
+      birthdate: [null, [Validators.required, validBirthdate]],
+      email: [null, [Validators.required, Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)]],
       team_ids: [[], null]
     });
 
