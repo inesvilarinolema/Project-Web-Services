@@ -12,26 +12,16 @@ import { Team } from '../../models/team';
 import { TeamsService } from '../../services/teams';
 import { ColorsService } from '../../services/colors';
 
-/*
-function validBirthdate(): ValidatorFn {
+function dateInRange(lower: Date, upper: Date): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
-    if(!control.value) return null;
-    const timestamp = new Date(control.value).getTime();
-    if(timestamp < new Date('1900-01-01').getTime() || timestamp > Date.now()) {
+    if (!control.value) return null;
+    const valueDate = new Date(control.value);
+    if (isNaN(valueDate.getTime())) {
       return { invalidDate: true };
-    } 
+    }
+    if (valueDate < lower || valueDate > upper) return { dateOutOfRange: { lower, upper } };
     return null;
   }
-}
-*/
-
-function validBirthdate(control: AbstractControl): ValidationErrors | null {
-  if(!control.value) return null;
-  const timestamp = new Date(control.value).getTime();
-  if(timestamp < new Date('1900-01-01').getTime() || timestamp > Date.now()) {
-    return { invalidDate: true };
-  } 
-  return null;
 }
 
 @Component({
@@ -54,8 +44,8 @@ export class PersonFormComponent {
     this.form = this.fb.group({
       firstname: ['', Validators.required],
       lastname: ['', Validators.required],
-      birthdate: [null, [Validators.required, validBirthdate]],
-      email: [null, [Validators.required, Validators.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)]],
+      birthdate: [null, [Validators.required , dateInRange(new Date('1900-01-01'), new Date())]],
+      email: [null, Validators.pattern( /^[^\s@]+@[^\s@]+\.[^\s@]+$/ )],
       team_ids: [[], null]
     });
 
