@@ -1,1 +1,10 @@
-<p>Welcome to the home page of our Single Page Application (SPA)!</p>
+@if(isInRole([0,1])) {
+    <canvas
+      baseChart
+      [data]="chartData"
+      [options]="chartOptions"
+      [type]="'bar'">
+    </canvas>
+} @else {
+    <em>You have to log in to operate</em>
+}

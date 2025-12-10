@@ -1,11 +1,65 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
+import { BaseChartDirective } from 'ng2-charts';
+import { ChartConfiguration } from 'chart.js';
+
+import 'chart.js/auto';
+
+import { AuthService } from '../../services/auth';
+import { TeamsService } from '../../services/teams';
+import { User } from '../../models/user';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'home-page',
-  imports: [],
+  imports: [CommonModule, BaseChartDirective],
   templateUrl: './home.html',
-  styleUrls: ['./home.scss']
+  styleUrls: ['./home.scss'],
+  standalone: true
 })
 export class HomePage {
 
+  user: User | null = null;
+
+  @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
+  
+  chartData: ChartConfiguration<'bar'>['data'] = {
+    labels: [],
+    datasets: [
+      {
+        label: 'Number of members',
+        data: [],
+        backgroundColor: [],
+      }
+    ]
+  };
+
+  chartOptions: ChartConfiguration<'bar'>['options'] = {
+    responsive: true,
+    scales: {
+      y: {
+        title: { display: true, text: 'Number of members' },
+        beginAtZero: true
+      }
+    },
+    plugins: {
+      legend: { display: false }
+    }
+  };
+
+  constructor(private authService: AuthService, private teamsService: TeamsService) {
+    this.authService.currentUser$.subscribe(user => { this.user = user });
+  }
+
+  ngOnInit() {
+    this.teamsService.getTeams("", 3).subscribe(teams => {
+      this.chartData.labels = teams.map(team => (team.name));
+      this.chartData.datasets[0].data = teams.map(team => (team.member_count ?? 0));
+      this.chartData.datasets[0].backgroundColor = teams.map(team => (team.color ?? 0));
+      this.chart?.update();
+    })
+  }
+
+  isInRole(roles: number[]) {
+    return this.authService.isInRole(this.user, roles);
+  }
 }
