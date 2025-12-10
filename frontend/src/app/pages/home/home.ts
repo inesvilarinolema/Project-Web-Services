@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, HostListener } from '@angular/core';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
 
@@ -21,6 +21,10 @@ export class HomePage {
   user: User | null = null;
 
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
+  @HostListener('window:resize')
+    onResize() {
+    this.chart?.chart?.resize();
+  }
   
   chartData: ChartConfiguration<'bar'>['data'] = {
     labels: [],
@@ -38,10 +42,14 @@ export class HomePage {
     scales: {
       y: {
         title: { display: true, text: 'Number of members' },
-        beginAtZero: true
+        beginAtZero: true,
+        ticks: {
+          precision: 0
+        }
       }
     },
     plugins: {
+      title: { display: true, text: 'Teams chart', font: { size: 24 }, },
       legend: { display: false }
     }
   };
