@@ -42,8 +42,8 @@ export const teamTableDef = {
     id: { type: 'INTEGER', primaryKey: true, autoincrement: true },
     name: { type: 'TEXT' },
     longname: { type: 'TEXT' },
-    color: { type: 'TEXT' },
-    has_avatar: { type: 'INTEGER' }
+    color: { type: 'TEXT', skipFiltering: true },
+    has_avatar: { type: 'INTEGER', skipFiltering: true }
   }
 };
 

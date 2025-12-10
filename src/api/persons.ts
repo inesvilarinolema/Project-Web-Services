@@ -38,13 +38,15 @@ personsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) 
   const { total } = await db.connection!.get("SELECT COUNT(1) AS total FROM persons");
   let filtered = total;
   if (q) { // filter query provided
-    let concat = Object.entries(personTableDef.columns).map(([name, def]) => {
-      if (def.type === 'DATE') {
-        // special handling of date by conversion from unix timestamp in ms to YYYY-MM-DD
-        return `COALESCE(strftime('%Y-%m-%d', ${personTableDef.name}.${name} / 1000, 'unixepoch'),'')`;
-      }
-      return `COALESCE(${personTableDef.name}.${name},'')`; // coalesce is needed to protect against potential null-values
-    }).join(" || ' ' || ");
+    let concat = Object.entries(personTableDef.columns)
+      .filter(([_name, def]) => !('skipFiltering' in def && def.skipFiltering))
+      .map(([name, def]) => {
+        if (def.type === 'DATE') {
+          // special handling of date by conversion from unix timestamp in ms to YYYY-MM-DD
+          return `COALESCE(strftime('%Y-%m-%d', ${personTableDef.name}.${name} / 1000, 'unixepoch'),'')`;
+        }
+        return `COALESCE(${personTableDef.name}.${name},'')`; // coalesce is needed to protect against potential null-values
+      }).join(" || ' ' || ");
     concat += " || ' ' || COALESCE(team_objects,'')";
     let selection = ' WHERE ' + concat + ' LIKE ?';
     query += selection;

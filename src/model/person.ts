@@ -20,9 +20,9 @@ export class Person {
       throw new HttpError(400, 'Email was not provided correctly');
 
     this.id = 0; // will be set by the database AUTOINCREMENT
-    this.firstname = firstname;
-    this.lastname = lastname;
+    this.firstname = firstname.trim();
+    this.lastname = lastname.trim();
     this.birthdate = birthdate;
-    this.email = email;
+    this.email = email.trim();
   }
 }

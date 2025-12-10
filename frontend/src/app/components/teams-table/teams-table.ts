@@ -6,6 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSortModule, Sort } from '@angular/material/sort';
 
 import { Team } from '../../models/team'
 import { TeamsService } from '../../services/teams';
@@ -18,7 +19,7 @@ import { AuthService } from '../../services/auth';
   selector: 'teams-table',
   templateUrl: './teams-table.html',
   styleUrls: ['./teams-table.scss'],
-  imports: [CommonModule, MatTableModule, MatChipsModule, MatProgressSpinnerModule],
+  imports: [CommonModule, MatSortModule, MatTableModule, MatChipsModule, MatProgressSpinnerModule],
   standalone: true
 })
 export class TeamsTableComponent {
@@ -29,6 +30,7 @@ export class TeamsTableComponent {
   user: User | null = null;
   loading: boolean = false;
   timestamp = Date.now();
+  order: number = 1;
 
   @Input() filter: string = '';
   
@@ -43,10 +45,10 @@ export class TeamsTableComponent {
 
   loadData() {
     this.loading = true;
-    this.teamsService.getTeams(this.filter).subscribe({
+    this.teamsService.getTeams(this.filter, this.order).subscribe({
       next: (data) => {
         this.loading = false;
-        this.teams = data
+        this.teams = data;
       },
       error: (err) => {
         this.loading = false;
@@ -77,5 +79,21 @@ export class TeamsTableComponent {
 
   isInRole(roles: number[]) {
     return this.authService.isInRole(this.user, roles);
+  }
+
+  onSortChange(sort: Sort) {
+    const columnNo = parseInt(sort.active);
+    if(columnNo) {
+      switch(sort.direction) {
+        case 'asc':
+          this.order = columnNo;
+          this.loadData();
+          break;
+        case 'desc':
+          this.order = -columnNo;
+          this.loadData();
+          break;
+      }
+    }
   }
 }

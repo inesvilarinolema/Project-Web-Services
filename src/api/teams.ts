@@ -23,18 +23,18 @@ teamsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) =>
 
   const sqlParams: any[] = [];
 
-  const q = req.query.filter as string;
+  const q = req.query.q as string;
   if (q) { // filter query provided
-    let concat = Object.entries(teamTableDef.columns).map(([name, def]) => {
-      if (def.type === 'DATE') {
-        // special handling of date by conversion from unix timestamp in ms to YYYY-MM-DD
-        return `COALESCE(strftime('%Y-%m-%d', ${teamTableDef.name}.${name} / 1000, 'unixepoch'),'')`;
-      }
-      return `COALESCE(${teamTableDef.name}.${name},'')`; // coalesce is needed to protect against potential null-values
-    }).join(" || ' ' || ");
-    console.log(concat);
+    let concat = Object.entries(teamTableDef.columns)
+      .filter(([_name, def]) => !('skipFiltering' in def && def.skipFiltering))
+      .map(([name, def]) => {
+        if (def.type === 'DATE') {
+          // special handling of date by conversion from unix timestamp in ms to YYYY-MM-DD
+          return `COALESCE(strftime('%Y-%m-%d', ${teamTableDef.name}.${name} / 1000, 'unixepoch'),'')`;
+        }
+        return `COALESCE(${teamTableDef.name}.${name},'')`; // coalesce is needed to protect against potential null-values
+      }).join(" || ' ' || ");
     query += ' WHERE ' + concat + ' LIKE ?';
-    console.log(query);
     sqlParams.push(`%${q.replace(/'/g, "''")}%`);
   }
   const order = parseInt(req.query.order as string, 10);

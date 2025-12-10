@@ -57,7 +57,7 @@ export class PersonFormComponent {
   }
 
   ngOnInit() {
-    this.teamsService.getTeams().subscribe(teams => {
+    this.teamsService.getTeams("", 3).subscribe(teams => {
       this.teams = teams;
       this.teamsMap = Object.fromEntries(this.teams.map(t => [t.id, t]));
     })
