@@ -119,3 +119,6 @@ Simply delete all/selected `*.sqlite3` files from db folder
 
 ##### Enjoy the working Webapp in your browser! :)
 http://localhost:4200
+
+##### Visual components relationships
+![Visual components](./visual-component-dependencies.drawio.png)
