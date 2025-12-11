@@ -11,6 +11,7 @@ import { AppRoute, routes } from './app.routes';
 import { User } from './models/user';
 import { AuthService } from './services/auth';
 import { LoginDialog } from './dialogs/login/login';
+import { HttpParams } from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
@@ -47,15 +48,16 @@ export class App {
       width: '33%'
     });
     dialogRef.afterClosed().subscribe(result => {
-      if (result === 'submitted') {
-        this.router.navigate(['/']);
+      console.log(result);
+      if (result === 'success') {
+        this.router.navigate(['/'], { queryParams: { reload: Date.now() }});
       }
     });
   }
 
   onLogout() {
     this.authService.logout().subscribe();
-    this.router.navigate(['/']);
+    this.router.navigate(['/'], { queryParams: { reload: Date.now() }});
   }
   
   isRouteAvailable(route: AppRoute): boolean {

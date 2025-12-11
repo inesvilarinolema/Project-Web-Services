@@ -39,7 +39,7 @@ export class LoginDialog {
               duration: 5000,
               panelClass: ['snackbar-success']
             });
-            this.dialogRef.close();
+            this.dialogRef.close('success');
           },
           error: (err) => {
             this.snackBar.open('Login failed', 'Close', {
