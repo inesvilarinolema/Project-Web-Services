@@ -48,16 +48,15 @@ export class App {
       width: '33%'
     });
     dialogRef.afterClosed().subscribe(result => {
-      console.log(result);
       if (result === 'success') {
-        this.router.navigate(['/'], { queryParams: { reload: Date.now() }});
+        this.router.navigate(['/']);
       }
     });
   }
 
   onLogout() {
     this.authService.logout().subscribe();
-    this.router.navigate(['/'], { queryParams: { reload: Date.now() }});
+    this.router.navigate(['/']);
   }
   
   isRouteAvailable(route: AppRoute): boolean {

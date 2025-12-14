@@ -55,16 +55,17 @@ export class HomePage {
   };
 
   constructor(private authService: AuthService, private teamsService: TeamsService) {
-    this.authService.currentUser$.subscribe(user => { this.user = user });
-  }
-
-  ngOnInit() {
-    this.teamsService.getTeams("", 3).subscribe(teams => {
-      this.chartData.labels = teams.map(team => (team.name));
-      this.chartData.datasets[0].data = teams.map(team => (team.member_count ?? 0));
-      this.chartData.datasets[0].backgroundColor = teams.map(team => (team.color ?? 0));
-      this.chart?.update();
-    })
+    this.authService.currentUser$.subscribe(user => { 
+      this.user = user;
+      if(this.isInRole([0,1])) {
+        this.teamsService.getTeams("", 3).subscribe(teams => {
+          this.chartData.labels = teams.map(team => (team.name));
+          this.chartData.datasets[0].data = teams.map(team => (team.member_count ?? 0));
+          this.chartData.datasets[0].backgroundColor = teams.map(team => (team.color ?? 0));
+          this.chart?.update();
+        });
+      }
+    });
   }
 
   isInRole(roles: number[]) {
