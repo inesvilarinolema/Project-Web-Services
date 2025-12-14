@@ -34,7 +34,7 @@ export class PersonsTableComponent implements AfterViewInit, OnDestroy {
     }
   } // set private component _filter if parent component changes value of filter
 
-  @Output() countsChange = new EventEmitter<{ total: number, filtered: number }>();
+  @Output() countsChange = new EventEmitter<{ total: number, filtered: number, order: number }>();
   
   @ViewChild('tableContainer') tableContainer!: ElementRef<HTMLDivElement>;
 
@@ -115,7 +115,7 @@ export class PersonsTableComponent implements AfterViewInit, OnDestroy {
 
     this.personsService.getPersons(this._filter, this.limit, this.offset, this.order)
       .subscribe(response => {
-        this.countsChange.emit({ total: response.total, filtered: response.filtered }); // send changed counters to parent
+        this.countsChange.emit({ total: response.total, filtered: response.filtered, order: this.order }); // send changed counters to parent
         const persons = response.persons;
 
         if (persons.length < this.limit) {

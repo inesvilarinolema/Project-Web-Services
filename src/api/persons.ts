@@ -66,7 +66,7 @@ personsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) 
     sqlParams.push(limit);
   }
   const offset = parseInt(req.query.offset as string, 0);
-  if (!isNaN(offset)) { // offset provided
+  if (!isNaN(limit) && limit > 0 && !isNaN(offset)) { // offset provided
     query += ' OFFSET ?';
     sqlParams.push(offset);
   }

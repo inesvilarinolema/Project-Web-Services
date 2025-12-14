@@ -7,6 +7,10 @@ import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatBadgeModule } from '@angular/material/badge';
 
+import pdfMake from 'pdfmake/build/pdfmake';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
+(pdfMake as any).vfs = (pdfFonts as any).vfs;
+
 import { PersonsTableComponent } from '../../components/persons-table/persons-table';
 import { EditPersonDialog } from '../../dialogs/edit-person/edit-person';
 import { PersonsService } from '../../services/persons';
@@ -30,6 +34,7 @@ export class PersonsPage {
     user: User | null = null;
     total: number = 0;
     filtered: number = 0;
+    order: number = 1;
     
     constructor(private authService: AuthService, private personsService: PersonsService, private dialog: MatDialog) {
         this.authService.currentUser$.subscribe(user => { this.user = user });
@@ -56,8 +61,45 @@ export class PersonsPage {
            return this.authService.isInRole(this.user, roles);
     }
 
-    onCountsChange(counts: { total: number, filtered: number }) {
+    onCountsChange(counts: { total: number, filtered: number, order: number }) {
         this.total = counts.total;
         this.filtered = counts.filtered;
+        this.order = counts.order;
+    }
+
+    makeReport(all: boolean = true) {
+        const filter = all ? '' : this.filterControl.value ?? '';
+        this.personsService.getPersons(filter, 0, 0, this.order).subscribe(response => {
+
+            const tableHeader = ['ID', 'Firstname', 'Lastname', 'Birthdate', 'Email', 'Teams'];
+
+            const tableBody = response.persons.map(person => [
+                person.id.toString(),
+                person.firstname,
+                person.lastname,
+                new Date(person.birthdate).toLocaleDateString(),
+                person.email,
+                person.team_objects?.map(t => t.name).join(', ') ?? ''
+            ]);
+
+            const doc: any = {
+                pageOrientation: 'landscape',
+                content: [
+                    { text: 'Persons', style: 'header' },
+                    { text: (filter ? 'filtered by ' + filter : 'all') + ` ${response.filtered} rows`, style: 'subheader' },
+                    { text: 'generated at ' + new Date().toLocaleDateString(), alignment: 'right' },
+                    { table: {
+                        headerRows: 1,
+                        widths: ['auto','auto','auto','auto','auto','*'],
+                        body: [tableHeader, ...tableBody]
+                    }}
+                ],
+                styles: {
+                    header: { fontSize: 22, bold: true },
+                    subheader: { fontSize: 16, bold: true }
+                }
+            }
+            pdfMake.createPdf(doc).download('persons.pdf');
+        });
     }
 }
