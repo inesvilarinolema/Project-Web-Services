@@ -1,3 +1,21 @@
+# Passing project
+
+## Task for satisfactory grade (3)
+
+Extend the data model with a new entity: tasks.
+
+Each task has a unique `id`, `name`, team assignment (`team_id`), and person responsible (`person_id`), who must be a member of that team. Additionally, it has `start_date` (required when creating the task) and `end_date` (can be null, but cannot be in the future or older than the `start_date`).
+
+An additional navigation menu item, `Tasks`, allows you to manage tasks. Tasks can be created, modified, and deleted, similarly to the `Persons` and `Teams` tabs. Consistency must be ensured, meaning a person's team affiliation cannot be changed if they are responsible for a task assigned to the team. Filtering is implemented as a possibility to select (with a multiple-choice combobox, like in the `person-form`) a team which task is assigned to.
+
+In addition, a Gantt chart of tasks on a timeline should be visible above the task table. This timeline ranges from the oldest start date among the tasks to the present day. Tasks without an end date are displayed up to the right margin of the chart. The colors of the tasks are the same as the colors of the teams to which they are assigned.
+
+## Task for good grade (4)
+TBD. The task for satisfactory grade will be a base for it, so implementing the previous task is obligatory.
+
+## Task for very good grade (5)
+TBD. The task for satisfactory grade will be also a base for it.
+
 # Frontend
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.0.0.
