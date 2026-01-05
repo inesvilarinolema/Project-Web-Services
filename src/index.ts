@@ -1,3 +1,4 @@
+import http from 'http';
 import express from 'express';
 import morgan from 'morgan';
 import { config } from 'dotenv';
@@ -10,6 +11,7 @@ import { authRouter, initAuth } from './helpers/auth';
 import { uploadRouter } from './helpers/fileupload';
 import { personsRouter } from './api/persons';
 import { teamsRouter } from './api/teams';
+import { attachWebSocketServer } from './helpers/websocket';
 
 config({ quiet: true });
 
@@ -53,8 +55,12 @@ async function main() {
   // install our error handler (must be the last app.use)
   app.use(errorHandler);
 
+  // import and install websocket handler
+  const server = http.createServer(app);
+  attachWebSocketServer(server);
+
   const port = process.env.PORT || 3000;
-  app.listen(port, () => {
+  server.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
 }
