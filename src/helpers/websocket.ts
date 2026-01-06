@@ -4,6 +4,7 @@ import signature from 'cookie-signature';
 import { SessionData } from 'express-session';
 import { WebSocketServer, WebSocket } from 'ws';
 import { findUserByIdSafe, sessionStore } from './auth';
+import { User } from '../model/user';
 
 interface WSMessage {
   type: string;
@@ -11,7 +12,7 @@ interface WSMessage {
 }
 
 interface WSWithUser extends WebSocket { // extended WebSocket to include user info
-  user?: any;
+  user?: User;
 }
 
 interface ClientState {
@@ -68,8 +69,12 @@ export function attachWebSocketServer(server: http.Server) {
         if (!err && session) {
           userId = (session as any).passport?.user;
         }
-        const user = userId ? findUserByIdSafe(userId) : undefined;
-        console.log(`Websocket connection established as ${JSON.stringify(user)}`);
+        const user: User | undefined = userId ? findUserByIdSafe(userId) : undefined;
+        if(user) {
+          console.log('Websocket connected for', user.username);
+        } else {
+          console.log('Websocket connected for not-logged-in');
+        }
         wss.handleUpgrade(req, socket, head, ws => {
           const wsUser = ws as WSWithUser;
           wsUser.user = user;
