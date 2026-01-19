@@ -5,18 +5,19 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { APP_VERSION } from '../../../src/shared/version';
 import { AppRoute, routes } from './app.routes';
 import { User } from './models/user';
 import { AuthService } from './services/auth';
 import { LoginDialog } from './dialogs/login/login';
-import { HttpParams } from '@angular/common/http';
+import { WebsocketService } from './services/websocket';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterModule, MatToolbarModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [RouterModule, MatToolbarModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, MatSnackBarModule],
   templateUrl: './app.html',
   styleUrls: ['./app.scss']
 })
@@ -27,8 +28,16 @@ export class App {
   loading: boolean = true;
   generalError: string = '';
 
-  constructor (private router: Router, private authService: AuthService, private dialog: MatDialog) {
+  constructor (private router: Router, private authService: AuthService, private dialog: MatDialog, private websocketService: WebsocketService, private snackbar: MatSnackBar) {
     this.authService.currentUser$.subscribe(u => (this.user = u));
+    this.websocketService.messages$.subscribe(msg => {
+      if(msg.type == 'login') {
+        this.snackbar.open(msg.data, 'Close', {
+                        duration: 5000,
+                        panelClass: ['snackbar-warning']
+                    });
+      }
+    })
   }
 
   ngOnInit() {

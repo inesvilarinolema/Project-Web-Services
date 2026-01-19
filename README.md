@@ -13,7 +13,12 @@ An additional navigation menu item, `Tasks`, allows you to manage tasks. Tasks c
 In addition, a Gantt chart of tasks on a timeline should be visible above the task table. This timeline ranges from the oldest start date among the tasks to the present day. Tasks without an end date are displayed up to the right margin of the chart. The colors of the tasks are the same as the colors of the teams to which they are assigned.
 
 #### Task for good grade (4)
-TBD. The task for satisfactory grade will be a base for it, so implementing the previous task is obligatory.
+The task for satisfactory grade will be a base for it, so implementing the previous task is obligatory. Additionally:
+
+* all operations modifying database should be logged in new table; admin has a page to browse the changes;
+* admin has new page to display all logged-in users; he/she can enforce logout of any user;
+* if one logged-in admin has dialogs edit-person or edit-task opened, different logged-in admin, instead of opening the dialog, gets a warning message (only one admin can change data simultaneously);
+* chart on the Home Page should be automatically redrawn if other user has just changed membership table (data for the chart was modified);
 
 #### Task for very good grade (5)
 TBD. The task for satisfactory grade will be also a base for it.
