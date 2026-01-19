@@ -40,7 +40,6 @@ export class TeamsService {
     return this.http.delete<Team>(this.apiUrl, { params });
   }
 
-  // Method to notify subscribers to reload the teams list
   notifyReload() {
     this.reloadSubject.next();
   }
@@ -57,5 +56,9 @@ export class TeamsService {
         method: 'POST',
         body: formData,
     });
+  }
+
+  getMembers(teamId: number) {
+    return this.http.get<any[]>(`/api/teams/${teamId}/members`);
   }
 }

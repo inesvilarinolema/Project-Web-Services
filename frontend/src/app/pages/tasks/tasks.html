@@ -1,0 +1,37 @@
+@if(isInRole([0,1])) {
+  <div>
+    <div class="controls-container">
+
+      @if(isInRole([0])) {
+        <button mat-raised-button class="new-task-button" color="primary" (click)="openDialog()">
+          Add Task
+        </button>
+      }
+
+      <div class="spacer"></div>
+
+      <mat-form-field appearance="outline" class="filter-field" style="margin-right: 10px; min-width: 150px;">
+        <mat-label>Teams</mat-label>
+        <mat-select multiple [(ngModel)]="selectedTeamIds">
+          @for (team of teams; track team.id) {
+            <mat-option [value]="team.id">{{ team.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-icon matPrefix>search</mat-icon>
+        <mat-label>Filter Text</mat-label>
+        <input matInput [formControl]="filterControl" placeholder="search..."/>
+      </mat-form-field>
+      
+      </div>
+
+      <tasks-table 
+          [filter]="filterControl.value || ''"
+          [teamIds]="selectedTeamIds"
+          [teams]="teams">
+      </tasks-table>
+
+  </div>
+}

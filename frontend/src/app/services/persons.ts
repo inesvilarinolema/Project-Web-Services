@@ -23,6 +23,12 @@ export class PersonsService {
     return this.http.get<PersonsResponse>(this.apiUrl, { params });
   }
 
+  getPersonsByTeam(teamId: number) {
+    return this.http.get<any>('/api/persons', {
+      params: { team_id: teamId }
+    });
+  }
+
   newPerson(person: Person): Observable<Person> {
     return this.http.post<Person>(this.apiUrl, person);
   }

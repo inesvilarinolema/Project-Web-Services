@@ -9,6 +9,10 @@ export const personsRouter = Router();
 
 // persons endpoints
 personsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) => {
+
+  const sqlParams: any[] = [];
+  const teamId = parseInt(req.query.team_id as string, 10);
+
   let query = `
     SELECT
       id, firstname, lastname, birthdate, email,
@@ -30,9 +34,15 @@ personsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) 
         WHERE m.person_id = persons.id
       ) AS team_objects
     FROM persons
-`; // base query
+`; 
 
-  const sqlParams: any[] = [];
+if (!isNaN(teamId)) {
+  query += `
+    JOIN memberships m2 ON m2.person_id = p.id
+    WHERE m2.team_id = ?
+  `;
+  sqlParams.push(teamId);
+}
 
   const q = req.query.q as string;
   const { total } = await db.connection!.get("SELECT COUNT(1) AS total FROM persons");
@@ -102,6 +112,36 @@ personsRouter.post('/', requireRole([0]), async (req: Request, res: Response) =>
   }
 });
 
+async function checkTeamConsistency(personId: number, newTeamIdsRaw: any) {
+  const newTeamIds = Array.isArray(newTeamIdsRaw) ? newTeamIdsRaw : [];
+
+  const currentMemberships = await db!.connection!.all(
+    'SELECT team_id FROM memberships WHERE person_id = ?', 
+    personId
+  );
+  const currentTeamIds = currentMemberships.map((m: any) => m.team_id);
+
+  const teamsToRemove = currentTeamIds.filter(tid => !newTeamIds.includes(tid));
+  if (teamsToRemove.length === 0) {
+    return;
+  }
+
+  const placeholder = teamsToRemove.join(','); 
+  const conflictTask = await db!.connection!.get(
+    `SELECT tasks.id, teams.name as team_name 
+     FROM tasks 
+     JOIN teams ON tasks.team_id = teams.id
+     WHERE tasks.person_id = ? 
+     AND tasks.team_id IN (${placeholder}) 
+     LIMIT 1`,
+    personId
+  );
+
+  if (conflictTask) {
+    throw new HttpError(409, `Cannot remove person from team '${conflictTask.team_name}' because they have assigned tasks there. Please reassign their tasks first.`);
+  }
+}
+
 personsRouter.put('/', requireRole([0]), async (req: Request, res: Response) => {
   const { id, firstname, lastname, birthdate, email, team_ids } = req.body;
   if (typeof id !== 'number' || id <= 0) {
@@ -109,6 +149,8 @@ personsRouter.put('/', requireRole([0]), async (req: Request, res: Response) => 
   }
   await db!.connection!.exec('BEGIN IMMEDIATE'); // start transaction
   try {
+
+    await checkTeamConsistency(id, team_ids);
     const personToUpdate = new Person(firstname, lastname, new Date(birthdate), email);
     personToUpdate.id = id;  // retain the original id
     // set team ids if provided
@@ -137,6 +179,17 @@ personsRouter.delete('/', requireRole([0]), async (req: Request, res: Response) 
   }
   await db!.connection!.exec('BEGIN IMMEDIATE'); // start transaction
   try {
+
+    const pendingTask = await db!.connection!.get(
+      'SELECT 1 FROM tasks WHERE person_id = ? LIMIT 1',
+      id
+    );
+
+    if (pendingTask) {
+      throw new HttpError(409, 'Cannot delete person: They still have assigned tasks. Please reassign their tasks first.'
+      );
+    }
+
     // await setMembership(id, []); // remove all memberships
     const deletedPerson = await db!.connection!.get('DELETE FROM persons WHERE id = ? RETURNING *', id);
     if (deletedPerson) {

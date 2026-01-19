@@ -1,0 +1,52 @@
+<form [formGroup]="form" class="task-form">
+
+  <mat-form-field appearance="outline">
+    <mat-label>Task Name</mat-label>
+    <input matInput formControlName="name">
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Team</mat-label>
+    <mat-select formControlName="team_id">
+      <mat-option *ngFor="let t of teams" [value]="t.id">{{ t.name }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Person</mat-label> <mat-select formControlName="person_id" required>     
+      <mat-option *ngFor="let p of people" [value]="p.id">
+          {{ p.firstname }} {{ p.lastname }}
+      </mat-option>
+    </mat-select>
+    
+    <mat-hint *ngIf="people.length === 0 && form.get('team_id')?.value">
+      No members in this team
+    </mat-hint><mat-error *ngIf="form.get('person_id')?.hasError('required')">
+      Person is required
+    </mat-error>
+  </mat-form-field> 
+
+  <mat-form-field appearance="outline">
+    <mat-label>Start Date</mat-label>
+    <input matInput [matDatepicker]="picker1" formControlName="start_date">
+    <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+    <mat-datepicker #picker1></mat-datepicker>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>End Date</mat-label>
+    <input matInput [matDatepicker]="picker2" formControlName="end_date" [max]="today">      
+    <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+    <mat-datepicker #picker2></mat-datepicker>
+
+    <mat-error *ngIf="form.get('end_date')?.hasError('matDatepickerMax')">
+      Cannot end in the future
+    </mat-error>
+
+    <mat-error *ngIf="form.get('end_date')?.hasError('endBeforeStart')">
+      End date cannot be before Start date
+    </mat-error>
+
+  </mat-form-field>
+
+</form>

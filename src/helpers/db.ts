@@ -47,6 +47,18 @@ export const teamTableDef = {
   }
 };
 
+export const taskTableDef = {
+  name: 'tasks',
+  columns: {
+    id: { type: 'INTEGER', primaryKey: true, autoincrement: true },
+    name: { type: 'TEXT' },
+    team_id: { type: 'INTEGER' },
+    person_id: { type: 'INTEGER' },
+    start_date: { type: 'INTEGER' }, // timestamp en ms
+    end_date: { type: 'INTEGER', skipFiltering: true } // opcional
+  }
+};
+
 export const membershipTableDef = {
   name: 'memberships',
   columns: {
@@ -59,6 +71,23 @@ export const membershipTableDef = {
     { column: 'team_id', references: 'teams(id)' }
   ]
 };
+
+export const auditLogTableDef = {
+  name: 'audit_logs',
+  columns: {
+    id: { type: 'INTEGER', primaryKey: true, autoincrement: true },
+    user_id: { type: 'INTEGER' },          // Quién hizo el cambio
+    action: { type: 'TEXT', notNull: true }, // 'CREATE', 'UPDATE', 'DELETE'
+    table_name: { type: 'TEXT', notNull: true }, // 'tasks', 'persons', etc.
+    record_id: { type: 'INTEGER' },        // El ID del registro afectado
+    timestamp: { type: 'DATETIME', default: 'CURRENT_TIMESTAMP' }, // Automático
+    details: { type: 'TEXT' }              // Detalles extra
+  },
+   foreignKeys: [
+    { column: 'user_id', references: 'persons(id)' },
+  ]
+
+}
 
 function createTableStatement(def: { 
     name: string;
@@ -138,4 +167,30 @@ export async function createSchemaAndData(): Promise<void> {
     await db.connection!.run('INSERT INTO memberships (person_id, team_id) VALUES (?, ?)', ...membership);
   }
   console.log('Memberships table created with sample data');
+
+
+  const createTasksStatement = createTableStatement(taskTableDef);
+  await db.connection!.run(createTasksStatement);
+  console.log('Tasks table created');
+
+  // Insertar datos falsos de tasks (opcional)
+  const tasksNum: number = parseInt(process.env.DBFAKETASKS || '50');
+  for (let i = 0; i < tasksNum; i++) {
+    const name = faker.lorem.words({ min: 2, max: 5 });
+    const team_id = Math.floor(Math.random() * teamsNum) + 1; // ids de teams creados
+    const person_id = Math.floor(Math.random() * personNum) + 1; // ids de persons creados
+    const start_date = faker.date.between({ from: '2023-01-01', to: '2025-12-31' }).getTime();
+    const end_date = faker.date.between({ from: start_date, to: '2026-12-31' }).getTime();
+
+    await db.connection!.run(
+      'INSERT INTO tasks (name, team_id, person_id, start_date, end_date) VALUES (?, ?, ?, ?, ?)',
+      name, team_id, person_id, start_date, end_date
+    );
+  }
+  console.log(`${tasksNum} fake tasks data created`);
+
+  const createAuditLogsStatement = createTableStatement(auditLogTableDef);
+  await db.connection!.run(createAuditLogsStatement);
+  console.log('Audit Logs table created');
 }
+

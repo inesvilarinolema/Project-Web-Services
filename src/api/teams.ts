@@ -8,6 +8,22 @@ import { requireRole } from "../helpers/auth";
 
 export const teamsRouter = Router();
 
+teamsRouter.get('/:id/members', requireRole([0, 1]), async (req: Request, res: Response) => {
+  const teamId = parseInt(req.params.id, 10);
+  try {
+    const query = `
+      SELECT p.id, p.firstname, p.lastname
+      FROM persons p
+      JOIN memberships m ON p.id = m.person_id
+      WHERE m.team_id = ?
+    `;
+    const members = await db!.connection!.all(query, [teamId]);
+    res.json(members);
+  } catch (error: any) {
+    throw new HttpError(500, error.message);
+  }
+});
+
 // teams endpoints
 teamsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) => {
   let query = `
