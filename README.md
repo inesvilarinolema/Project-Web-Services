@@ -21,7 +21,7 @@ The task for satisfactory grade will be a base for it, so implementing the previ
 * chart on the Home Page should be automatically redrawn if other user has just changed membership table (data for the chart was modified);
 
 #### Task for very good grade (5)
-TBD. The task for satisfactory grade will be also a base for it.
+The task for satisfactory grade and additionally: expand your existing use of Leaflet and Openstreetmap to present a map of all Team locations on a new page. Additionally, use OSRM (Open Source Routing Machine) to determine walking distances between locations and present them in a table below the map. OSRM queries should be generated from the backend.
 
 ## A project from the scratch
 

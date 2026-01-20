@@ -43,7 +43,9 @@ export const teamTableDef = {
     name: { type: 'TEXT' },
     longname: { type: 'TEXT' },
     color: { type: 'TEXT', skipFiltering: true },
-    has_avatar: { type: 'INTEGER', skipFiltering: true }
+    has_avatar: { type: 'INTEGER', skipFiltering: true },
+    latitude: { type: 'REAL', skipFiltering: true },
+    longitude: { type: 'REAL', skipFiltering: true }
   }
 };
 
@@ -121,11 +123,13 @@ export async function createSchemaAndData(): Promise<void> {
   const teamsNum: number = parseInt(process.env.DBFAKETEAMS || '10') || 10;
   for(let i = 0; i < teamsNum; i++) { 
     const name = faker.company.name();
-    await db.connection!.run('INSERT INTO teams (name, longname, color, has_avatar) VALUES (?, ?, ?, ?)',
+    await db.connection!.run('INSERT INTO teams (name, longname, color, has_avatar, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?)',
       initials(name),
       name,
       COLORS[Math.floor(Math.random() * COLORS.length)],
-      0
+      0,
+      51.759248 + Math.random() - 0.5,
+      19.455983 + Math.random() - 0.5
     );
   }
   console.log(`${teamsNum} fake teams data created`);

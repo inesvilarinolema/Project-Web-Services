@@ -32,6 +32,7 @@ export class TeamsService {
 
   modifyTeam(team: Team, avatarFile: File | undefined): Observable<Team> {
     this.uploadAvatar(team.id, avatarFile);
+    console.log(team);
     return this.http.put<Team>(this.apiUrl, { ...team, has_avatar: !!avatarFile });
   }
 
