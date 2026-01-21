@@ -6,6 +6,8 @@ import { Team } from "../model/team";
 import { deleteUploadedFile } from "../helpers/fileupload";
 import { requireRole } from "../helpers/auth";
 
+import { Audit } from "../model/audit";
+
 export const teamsRouter = Router();
 
 teamsRouter.get('/:id/members', requireRole([0, 1]), async (req: Request, res: Response) => {
@@ -80,7 +82,14 @@ teamsRouter.post('/', requireRole([0]), async (req: Request, res: Response) => {
     const addedTeam = await db!.connection!.get('INSERT INTO teams (name, longname, color, has_avatar) VALUES (?, ?, ?, ?) RETURNING *',
       newTeam.name, newTeam.longname, newTeam.color, newTeam.has_avatar
     );
+
+    const userId = (req as any).user ? (req as any).user.id : null;
+    if(userId){
+      await Audit.log(userId, 'CREATE', 'teams', newTeam.id, `Team '${name}' added`);
+    }
+
     res.json(addedTeam); // return the newly created Team; alternatively, you may consider returning the full list of teams
+
   } catch (error: Error | any) {
     throw new HttpError(400, 'Cannot add team: ' + error.message); // bad request; validation or database error
   }
@@ -101,6 +110,11 @@ teamsRouter.put('/', requireRole([0]), async (req: Request, res: Response) => {
       if(!has_avatar) {
         deleteUploadedFile(id.toString() + '.png', 'avatar'); // delete associated avatar file if exists
       }
+      const userId = (req as any).user ? (req as any).user.id : null;
+      if(userId){
+        await Audit.log(userId, 'UPDATE', 'teams', id, `Team '${name}' updated`);
+      }
+      
       res.json(updatedTeam); // return the updated Team
     } else {
       throw new HttpError(404, 'Team to update not found');
@@ -118,6 +132,11 @@ teamsRouter.delete('/', requireRole([0]), async (req: Request, res: Response) =>
   const deletedTeam = await db!.connection!.get('DELETE FROM teams WHERE id = ? RETURNING *', id);
   if (deletedTeam) {
     deleteUploadedFile(id.toString() + '.png', 'avatar'); // delete associated avatar file if exists
+    const userId = (req as any).user ? (req as any).user.id : null;
+    if(userId){
+      await Audit.log(userId, 'DELETE', 'teams', id, `Team deleted`);
+    }
+    
     res.json(deletedTeam); // return the deleted Team
   } else {
     throw new HttpError(404, 'Team to delete not found');

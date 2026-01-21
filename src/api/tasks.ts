@@ -98,21 +98,11 @@ tasksRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) =>
       const userId = (req as any).user ? (req as any).user.id : null;
     
       if (userId && result.lastID) {
-        await Audit.log(
-          userId, 
-          'CREATE', 
-          'tasks', 
-          result.lastID, 
-          `Task '${req.body.name}' created`
-        );
+        await Audit.log(userId, 'CREATE', 'tasks', result.lastID, `Task '${req.body.name}' created`);
       }
 
       res.json({ 
-        message: 'Task added successfully', 
-        task: { 
-            ...newTask,        
-            id: result.lastID  
-        } 
+        message: 'Task added successfully', task: { ...newTask, id: result.lastID} 
       });
 
     } catch (error: any) {
@@ -141,14 +131,20 @@ tasksRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) =>
       if (!updatedTask) {
         throw new HttpError(404, 'Task to update not found');
       }
-  
+
+      const userId = (req as any).user ? (req as any).user.id : null;
+      if(userId){
+        await Audit.log(userId, 'UPDATE', 'tasks', id, `Task ${name} updated`);
+      }
+      
+
       res.json(updatedTask);
     } catch (error: any) {
       throw new HttpError(400, 'Cannot update task: ' + error.message);
     }
   });
   
-  // DELETE /api/tasks
+  // DELETE 
   tasksRouter.delete('/', requireRole([0]), async (req: Request, res: Response) => {
     const id = parseInt(req.query.id as string, 10);
   
@@ -163,6 +159,11 @@ tasksRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) =>
   
       if (!deletedTask) {
         throw new HttpError(404, 'Task to delete not found');
+      }
+
+      const userId = (req as any).user ? (req as any).user.id : null;
+      if(userId){
+        await Audit.log(userId, 'DELETE', 'tasks', id, 'Task deleted');
       }
   
       res.json(deletedTask);

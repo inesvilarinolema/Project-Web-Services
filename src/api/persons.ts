@@ -5,6 +5,7 @@ import { db, personTableDef } from "../helpers/db";
 import { Person } from "../model/person";
 import { requireRole } from "../helpers/auth";
 
+import {Audit} from "../model/audit";
 export const personsRouter = Router();
 
 // persons endpoints
@@ -105,6 +106,12 @@ personsRouter.post('/', requireRole([0]), async (req: Request, res: Response) =>
     );
     await setMembership(addedPerson.id, newPerson.team_ids);
     await db!.connection!.exec('COMMIT');
+
+    const userId = (req as any).user ? (req as any).user.id : null;
+    if(userId){
+      await Audit.log(userId, 'CREATE', 'persons', addedPerson.id , `Person '${firstname}' '${lastname}' created`);
+    }
+
     res.json(addedPerson);
   } catch (error: Error | any) {
     await db!.connection!.exec('ROLLBACK');
@@ -161,6 +168,12 @@ personsRouter.put('/', requireRole([0]), async (req: Request, res: Response) => 
     if (updatedPerson) {
       await setMembership(updatedPerson.id, personToUpdate.team_ids);
       await db!.connection!.exec('COMMIT');
+
+      const userId = (req as any).user ? (req as any).user.id : null;
+      if(userId){
+        await Audit.log(userId, 'UPDATE', 'persons', id, `Person '${updatedPerson.firstname}' '${updatedPerson.lastname}' updated`);
+      }
+
       res.json(updatedPerson); // return the updated person
     } else {
       await db!.connection!.exec('ROLLBACK');
@@ -194,6 +207,12 @@ personsRouter.delete('/', requireRole([0]), async (req: Request, res: Response) 
     const deletedPerson = await db!.connection!.get('DELETE FROM persons WHERE id = ? RETURNING *', id);
     if (deletedPerson) {
       await db!.connection!.exec('COMMIT');
+
+      const userId = (req as any).user ? (req as any).user.id : null;
+      if(userId){
+        await Audit.log(userId, 'DELETE', 'persons', id, 'Person deleted');
+      }
+
       res.json(deletedPerson); // return the deleted person
     } else {
       await db!.connection!.exec('ROLLBACK'); 

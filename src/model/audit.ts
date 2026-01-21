@@ -21,14 +21,10 @@ export class Audit {
 
   static async getAll(limit: number = 100) {
     if (!db.connection) return [];
-
+    
     return await db.connection.all(`
-      SELECT 
-        audit_logs.*, 
-        users.email as user_email 
-      FROM audit_logs 
-      LEFT JOIN users ON audit_logs.user_id = users.id 
-      ORDER BY audit_logs.timestamp DESC 
+      SELECT * FROM audit_logs 
+      ORDER BY timestamp DESC 
       LIMIT ?`, 
       limit
     );
