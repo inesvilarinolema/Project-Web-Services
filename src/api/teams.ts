@@ -5,7 +5,6 @@ import { db, teamTableDef } from "../helpers/db";
 import { Team } from "../model/team";
 import { deleteUploadedFile } from "../helpers/fileupload";
 import { requireRole } from "../helpers/auth";
-
 import { Audit } from "../model/audit";
 
 export const teamsRouter = Router();

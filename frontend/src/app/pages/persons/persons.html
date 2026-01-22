@@ -25,6 +25,9 @@
 
     </div>
 
-    <persons-table [filter]="filterControl.value || ''" (countsChange)="onCountsChange($event)"></persons-table>
+    <persons-table 
+      [filter]="filterControl.value ?? ''" 
+      (countsChange)="onCountsChange($event)">
+    </persons-table>
   </div>
 }

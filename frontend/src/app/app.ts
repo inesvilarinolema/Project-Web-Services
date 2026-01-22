@@ -6,7 +6,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-
 import { APP_VERSION } from '../../../src/shared/version';
 import { AppRoute, routes } from './app.routes';
 import { User } from './models/user';
@@ -21,6 +20,7 @@ import { WebsocketService } from './services/websocket';
   templateUrl: './app.html',
   styleUrls: ['./app.scss']
 })
+
 export class App {
   title: string = APP_VERSION;
   routes = routes;
@@ -36,6 +36,20 @@ export class App {
                         duration: 5000,
                         panelClass: ['snackbar-warning']
                     });
+      }
+
+      else if (msg.type === 'forceLogout') {
+        console.warn('Recibida orden de expulsión:', msg.data);
+        this.authService.logout().subscribe(() => {
+            
+            this.router.navigate(['/']); 
+            
+            this.snackbar.open(msg.data || 'You have been logged out by admin', 'OK', {
+                duration: 10000, 
+                verticalPosition: 'top', 
+                panelClass: ['snackbar-error'] 
+            });
+        });
       }
     })
   }
@@ -71,4 +85,5 @@ export class App {
   isRouteAvailable(route: AppRoute): boolean {
     return this.authService.isRouteAvailable(this.user!, route);
   }
+  
 }

@@ -27,11 +27,11 @@ export function broadcast(roles: number[], msg: WSMessage) {
 
   for (const [ws, client] of clients) {
     const user = ws.user;
-    if (!user) continue; // skip not-logged-ins
+    //if (!user) continue; // skip not-logged-ins
 
     // check if the user has one of the roles
-    const hasRole = user.roles?.some((role: number) => roles.includes(role));
-    if (!hasRole) continue;
+    //const hasRole = user.roles?.some((role: number) => roles.includes(role));
+    //if (!hasRole) continue;
 
     if (ws.readyState === ws.OPEN) {
       try {
@@ -82,8 +82,17 @@ export function attachWebSocketServer(server: http.Server) {
         });
       });
     } else {
-      socket.destroy();  // refuse ws connection without session
-      return;
+      //socket.destroy();  // refuse ws connection without session
+      //return;
+
+      //console.log('⚠️ WS: No he encontrado sessionID, pero voy a permitir la conexión para probar.');
+      //console.log('   Cookies recibidas:', req.headers.cookie);
+     
+      wss.handleUpgrade(req, socket, head, ws => {
+          const wsUser = ws as WSWithUser;
+          wsUser.user = undefined; // Sin usuario
+          wss.emit('connection', wsUser, req);
+      });
     }
   });
 
@@ -126,4 +135,20 @@ export function attachWebSocketServer(server: http.Server) {
       }
     }
   }, PING_INTERVAL_MS);
+}
+
+/*Function that searches for the socket of a specific user based on their ID*/
+export function sendMessageToUser(userId: number, msg: WSMessage) {
+  for (const [ws, client] of clients) {
+    if (ws.user && ws.user.id === userId) {
+      if (ws.readyState === ws.OPEN) {
+        try {
+          ws.send(JSON.stringify(msg));
+          console.log(`Mensaje enviado a usuario ${userId}:`, msg.type);
+        } catch (err) {
+          console.error('Error enviando mensaje directo:', err);
+        }
+      }
+    }
+  }
 }

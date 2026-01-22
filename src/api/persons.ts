@@ -4,7 +4,7 @@ import { HttpError } from "../helpers/errors";
 import { db, personTableDef } from "../helpers/db";
 import { Person } from "../model/person";
 import { requireRole } from "../helpers/auth";
-
+import { broadcast } from "../helpers/websocket";
 import {Audit} from "../model/audit";
 export const personsRouter = Router();
 
@@ -174,6 +174,8 @@ personsRouter.put('/', requireRole([0]), async (req: Request, res: Response) => 
         await Audit.log(userId, 'UPDATE', 'persons', id, `Person '${updatedPerson.firstname}' '${updatedPerson.lastname}' updated`);
       }
 
+      broadcast([0,1], {type: 'membershipsUpdate'});
+
       res.json(updatedPerson); // return the updated person
     } else {
       await db!.connection!.exec('ROLLBACK');
@@ -212,6 +214,8 @@ personsRouter.delete('/', requireRole([0]), async (req: Request, res: Response) 
       if(userId){
         await Audit.log(userId, 'DELETE', 'persons', id, 'Person deleted');
       }
+
+      broadcast([0,1], {type: 'membershipsUpdate'});
 
       res.json(deletedPerson); // return the deleted person
     } else {

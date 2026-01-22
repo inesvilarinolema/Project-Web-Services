@@ -1,15 +1,13 @@
-import { Component, ViewChild, HostListener } from '@angular/core';
+import { Component, ViewChild, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
-
 import 'chart.js/auto';
+import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 
 import { AuthService } from '../../services/auth';
 import { TeamsService } from '../../services/teams';
 import { User } from '../../models/user';
-import { CommonModule } from '@angular/common';
-import { WebsocketService, WSMessage } from '../../services/websocket';
-import { map, pipe, Subscription } from 'rxjs';
 
 @Component({
   selector: 'home-page',
@@ -18,14 +16,15 @@ import { map, pipe, Subscription } from 'rxjs';
   styleUrls: ['./home.scss'],
   standalone: true
 })
-export class HomePage {
+export class HomePage implements OnInit, OnDestroy {
 
   user: User | null = null;
-  private sub?: Subscription;
+  private subs: Subscription = new Subscription(); // Para gestionar varias suscripciones
 
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
+
   @HostListener('window:resize')
-    onResize() {
+  onResize() {
     this.chart?.chart?.resize();
   }
   
@@ -46,9 +45,7 @@ export class HomePage {
       y: {
         title: { display: true, text: 'Number of members' },
         beginAtZero: true,
-        ticks: {
-          precision: 0
-        }
+        ticks: { precision: 0 }
       }
     },
     plugins: {
@@ -57,33 +54,45 @@ export class HomePage {
     }
   };
 
-  constructor(private authService: AuthService, private teamsService: TeamsService, private websocketService: WebsocketService) {
-    this.authService.currentUser$.subscribe(user => { 
+  constructor(
+    private authService: AuthService, 
+    private teamsService: TeamsService
+  ) {}
+
+  ngOnInit(): void {
+    // 1. Obtener usuario y cargar datos INICIALES
+    const authSub = this.authService.currentUser$.subscribe(user => { 
       this.user = user;
-      if(this.isInRole([0,1])) {
-        this.teamsService.getTeams("", 3).subscribe(teams => {
-          this.chartData.labels = teams.map(team => (team.name));
-          this.chartData.datasets[0].data = teams.map(team => (team.member_count ?? 0));
-          this.chartData.datasets[0].backgroundColor = teams.map(team => (team.color ?? 0));
-          this.chart?.update();
-        });
-      }
+      this.loadChartData(); 
     });
+    this.subs.add(authSub);
+
+    // 2. Suscribirse a CAMBIOS por WebSocket (vía TeamsService)
+    // Cuando alguien cambie miembros en otro lado, esto se dispara.
+    const wsSub = this.teamsService.reloadMemberShips$.subscribe(() => {
+        console.log('Gráfico: Detectado cambio en miembros. Actualizando...');
+        this.loadChartData(); 
+    });
+    this.subs.add(wsSub);
+  }
+
+  loadChartData() {
+    if (this.isInRole([0,1])) {
+        this.teamsService.getTeams("", 3).subscribe(teams => {
+            this.chartData.labels = teams.map(team => (team.name));
+            this.chartData.datasets[0].data = teams.map(team => (team.member_count ?? 0));
+            this.chartData.datasets[0].backgroundColor = teams.map(team => (team.color ?? '#ccc'));
+            
+            this.chart?.update(); 
+        });
+    }
   }
 
   isInRole(roles: number[]) {
     return this.authService.isInRole(this.user, roles);
   }
 
-  ngOnInit(): void {
-    this.sub = this.websocketService.messages$.pipe(
-        map(msg => typeof msg === 'string' ? JSON.parse(msg) as WSMessage : msg)
-    ).subscribe(msg => {
-      console.log('WebSocket message received:', msg);
-    });
-  }
-
   ngOnDestroy(): void {
-    this.sub?.unsubscribe();
+    this.subs.unsubscribe(); 
   }
 }

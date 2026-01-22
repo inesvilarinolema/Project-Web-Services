@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
-
+import { BehaviorSubject, Observable, tap, Subject } from 'rxjs';
+import { WebsocketService } from './websocket';
 import { Team } from '../models/team';
 
 @Injectable({
@@ -9,13 +9,24 @@ import { Team } from '../models/team';
 })
 export class TeamsService {
   private apiUrl = '/api/teams';
+
+  public reloadMemberShips$ = new Subject<void>();
   
   // Subject to notify components to reload the teams list
   private reloadSubject = new BehaviorSubject<void>(undefined);
   // Observable that components can subscribe to
   reload$ = this.reloadSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private wsService: WebsocketService) {
+
+    this.wsService.messages$.subscribe(msg => {
+
+      if(msg.type=='membershipsUpdate'){
+        console.log("Cambio detectado socket -> Avisando...");
+        this.reloadMemberShips$.next();
+      }
+    })
+  }
 
   getTeams(filter: string = '', order: number = 0): Observable<Team[]> {
     const params = new HttpParams().set('q', filter).set('order', order);

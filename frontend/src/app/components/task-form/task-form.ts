@@ -46,6 +46,27 @@ export class TaskFormComponent implements OnInit, OnChanges {
       end_date: new FormControl(null)
     }, { validators: dateRangeValidator });;
 
+    this.form.statusChanges.subscribe(status => {
+      const isValid = status === 'VALID';
+
+      if (!isValid) {
+      console.warn('❌ BLOQUEADO. El formulario tiene estos errores:');
+      
+      // 1. Errores globales (Fechas cruzadas, etc)
+      if (this.form.errors) console.log('   -> Error Global:', this.form.errors);
+
+      // 2. Errores campo a campo
+      Object.keys(this.form.controls).forEach(key => {
+          const control = this.form.get(key);
+          if (control && control.errors) {
+              console.log(`   -> Campo [${key}]:`, control.errors);
+              console.log(`      Valor actual:`, control.value);
+          }
+      });
+  }
+    this.validChange.emit(isValid);
+    });
+
     this.form.get('team_id')!.valueChanges.subscribe(teamId => {
       if (teamId) {
         this.loadPeople(teamId);
@@ -65,20 +86,28 @@ export class TaskFormComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (changes['task'] && this.task) {
       
-      //1. We fill in the data
-      this.form.patchValue(this.task);
+      const safeTeamId = this.task.team_id ? Number(this.task.team_id) : null;
+      const safePersonId = this.task.person_id ? Number(this.task.person_id) : null;
 
-      //2. We convert dates
-      this.form.patchValue({
-        start_date: this.task.start_date ? new Date(this.task.start_date) : null,
-        end_date: this.task.end_date ? new Date(this.task.end_date) : null
-      });
+      const formValues = {
+          name: this.task.name,
+          team_id: safeTeamId,
+          person_id: safePersonId,
+          start_date: this.task.start_date ? new Date(this.task.start_date) : null,
+          end_date: this.task.end_date ? new Date(this.task.end_date) : null
+      };
 
-      if (this.task.team_id) {
-        this.loadPeople(this.task.team_id);
+      this.form.patchValue(formValues, { emitEvent: false });
+
+      if (safeTeamId) {
+        this.loadPeople(safeTeamId);
       }
       
-      this.validChange.emit(this.form.valid);
+      setTimeout(() => {
+          this.form.updateValueAndValidity(); // Esto dispara statusChanges automáticamente
+          
+          this.validChange.emit(this.form.valid);
+      }, 100);
     }
   }
 
@@ -95,6 +124,7 @@ export class TaskFormComponent implements OnInit, OnChanges {
       }
     });
   }
+
 }
 
 export const dateRangeValidator: ValidatorFn = (group: AbstractControl): ValidationErrors | null => {
@@ -117,3 +147,4 @@ export const dateRangeValidator: ValidatorFn = (group: AbstractControl): Validat
 
   return null;
 };
+

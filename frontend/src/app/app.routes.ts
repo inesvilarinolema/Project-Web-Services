@@ -4,6 +4,7 @@ import { PersonsPage } from './pages/persons/persons';
 import { TeamsPage } from './pages/teams/teams';
 import { TasksPage } from './pages/tasks/tasks';
 import { AuditComponent } from './pages/audit/audit';
+import { ActiveUsersComponent } from './pages/active-users/active-users';
 
 export interface AppRoute extends Route {
   icon?: string;
@@ -15,6 +16,8 @@ export const routes: AppRoute[] = [
   { path: 'persons', component: PersonsPage, title: 'Persons', icon: 'person', roles: [0,1] },
   { path: 'teams', component: TeamsPage, title: 'Teams', icon: 'groups', roles: [0,1] },
   { path: 'tasks', component: TasksPage, title: 'Tasks', icon: 'list', roles: [0,1]},
-  { path: 'audit', component: AuditComponent, title: 'Audit', icon: 'history', roles: [0] }
+  { path: 'audit', component: AuditComponent, title: 'Audit', icon: 'history', roles: [0] },
+  { path: 'active-users', component: ActiveUsersComponent, title: 'Sessions', icon: 'group_off', roles: [0]}
+
 ];
 

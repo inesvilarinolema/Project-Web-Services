@@ -1,4 +1,4 @@
-import { Component, Inject, ViewChild } from '@angular/core';
+import { Component, Inject, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TaskFormComponent } from '../../components/task-form/task-form';
@@ -23,6 +23,7 @@ export class EditTaskDialog {
     private snackBar: MatSnackBar,
     private dialogRef: MatDialogRef<EditTaskDialog>,
     private tasksService: TasksService,
+    private cdr: ChangeDetectorRef,
     @Inject(MAT_DIALOG_DATA) public data: { row: Task }
   ) {}
 
@@ -109,6 +110,8 @@ export class EditTaskDialog {
   }
 
   onFormValidChange(valid: boolean) {
+    console.log('PADRE RECIBE VALIDEZ:', valid); // <--- Para ver si llega
     this.formValid = valid;
+    this.cdr.detectChanges(); 
   }
 }

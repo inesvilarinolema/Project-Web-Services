@@ -1,0 +1,41 @@
+
+<div class="container">
+<div class="header-container">
+  <h2>Active Users</h2>
+  
+  <button mat-raised-button color="primary" (click)="load()" [disabled]="isLoading">
+    <mat-icon>refresh</mat-icon>
+    {{ isLoading ? 'Loading...' : 'Refresh List' }}
+  </button>
+</div>
+
+<mat-progress-bar mode="indeterminate" *ngIf="isLoading"></mat-progress-bar>
+  <table mat-table [dataSource]="users" class="mat-elevation-z8">
+    
+    <ng-container matColumnDef="username">
+      <th mat-header-cell *matHeaderCellDef> UserName </th>
+      <td mat-cell *matCellDef="let u"> {{ u.username }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="expires">
+      <th mat-header-cell *matHeaderCellDef> Session Expires </th>
+      <td mat-cell *matCellDef="let u"> {{ u.valid_until | date:'short' }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef> Actions </th>
+      <td mat-cell *matCellDef="let u">
+        <button mat-raised-button color="warn" (click)="kick(u)" [disabled]="u.isCurrentSession">
+          {{ u.isCurrentSession ? 'Current (Me)' : 'Force Logout' }}
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+  
+  <div *ngIf="users.length === 0" style="padding:20px; text-align:center;">
+      No active users found.
+  </div>
+</div>

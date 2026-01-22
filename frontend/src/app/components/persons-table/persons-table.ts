@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, Input, ViewChild, OnDestroy, Output, EventEmitter } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, ViewChild, OnDestroy, Output, EventEmitter, OnInit} from '@angular/core';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatChipsModule } from '@angular/material/chips';
@@ -12,6 +12,7 @@ import { EditPersonDialog } from '../../dialogs/edit-person/edit-person';
 import { ColorsService } from '../../services/colors';
 import { User } from '../../models/user';
 import { AuthService } from '../../services/auth';
+import { LockService } from '../../services/lock';
 
 @Component({
   selector: 'persons-table',
@@ -20,7 +21,9 @@ import { AuthService } from '../../services/auth';
   imports: [CommonModule, MatTableModule, MatSortModule, MatChipsModule, MatProgressSpinnerModule],
   standalone: true
 })
-export class PersonsTableComponent implements AfterViewInit, OnDestroy {
+
+export class PersonsTableComponent implements AfterViewInit, OnDestroy, OnInit{
+  
   displayedColumns: string[] = ['id', 'firstname', 'lastname', 'birthdate', 'email', 'teams'];
   persons: Person[] = [];
   private observer?: IntersectionObserver;
@@ -53,37 +56,77 @@ export class PersonsTableComponent implements AfterViewInit, OnDestroy {
     private authService: AuthService,
     private colorsService: ColorsService,
     private personsService: PersonsService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private lockService: LockService 
   ) {
     this.authService.currentUser$.subscribe(user => { this.user = user; });
     this.getContrastColor = this.colorsService.getContrastColor;
   }
 
+  ngOnInit(): void {
+    this.loadData();
+    this.lockService.lockUpdate$.subscribe(() => {this.resetAndLoad();});
+  }
   ngAfterViewInit() {
     this.initObserver();
+    window.addEventListener('focus', this.onWindowFocus);
   }
 
   ngOnDestroy() {
     this.observer?.disconnect();
+    window.removeEventListener('focus', this.onWindowFocus);
+  }
+
+  private onWindowFocus = () => {
+    if (!this.loading) {
+       this.resetAndLoad(); 
+    }
   }
 
   openDialog(row: Person | null) {
     if (!this.isInRole([0])) return;
-    row!.team_ids = row?.team_objects?.map(team => team.id);
 
-    const scrollTop = this.tableContainer?.nativeElement.scrollTop || 0; // remember current position
-    const dialogRef = this.dialog.open(EditPersonDialog, {
-      width: '75%',
-      minWidth: '800px',
-      data: { row }
+    if (!row) {
+        this.launchDialog(null);
+        return;
+    }
+
+    row.team_ids = row.team_objects?.map(team => team.id);
+
+    this.lockService.lock('person', row.id).subscribe({
+        next: () => {
+            this.launchDialog(row);
+        },
+        error: (err: any) => {
+            if (err.lockedBy) {
+                alert(`Cannot edit. Record is currently locked by: ${err.lockedBy}`);
+            } else {
+                console.error('Lock error:', err);
+            }
+        }
     });
+  }
+
+  private launchDialog(row: Person | null) {
+    const scrollTop = this.tableContainer?.nativeElement.scrollTop || 0;
+    
+    const dialogRef = this.dialog.open(EditPersonDialog, {width: '75%',minWidth: '800px',data: { row }});
+
     dialogRef.afterClosed().subscribe(result => {
+      if (row) {
+          this.lockService.unlock('person', row.id).subscribe();
+      }
+
       if(result) {
         this.timestamp = Date.now();
         this.resetAndLoad();
-        this.tableContainer!.nativeElement.scrollTop = scrollTop;
+        setTimeout(() => {
+             if (this.tableContainer && this.tableContainer.nativeElement) {
+                 this.tableContainer.nativeElement.scrollTop = scrollTop;
+             }
+        }, 100); 
       }
-    })
+    });
   }
 
   isInRole(roles: number[]) {
@@ -157,3 +200,4 @@ export class PersonsTableComponent implements AfterViewInit, OnDestroy {
     }
   }
 }
+

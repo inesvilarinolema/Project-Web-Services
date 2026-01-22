@@ -14,6 +14,12 @@ import { teamsRouter } from './api/teams';
 import { tasksRouter } from './api/tasks';
 import { attachWebSocketServer } from './helpers/websocket';
 import { auditRouter } from './api/audit';
+import { openSessionsDb } from './helpers/sessionsdb';
+import { activeUsersRouter } from './api/active-users';
+import { lockRouter } from './helpers/lock-manage';
+
+import { hashPassword } from './helpers/auth';
+import { db } from './helpers/sysdb';
 
 config({ quiet: true });
 
@@ -43,6 +49,9 @@ async function main() {
 
   await openDb();
   console.log('OK main database connected');
+
+  await openSessionsDb();
+  console.log('OK sessions database conected');
   
   // auth router
   app.use('/api/auth', authRouter);
@@ -55,6 +64,8 @@ async function main() {
   app.use(apiUrl + '/teams', teamsRouter);
   app.use(apiUrl + '/tasks', tasksRouter);
   app.use('/api/audit', auditRouter);
+  app.use('/api/active-users', activeUsersRouter);
+  app.use('/api/locks', lockRouter);
   // install our error handler (must be the last app.use)
   app.use(errorHandler);
 
@@ -62,10 +73,43 @@ async function main() {
   const server = http.createServer(app);
   attachWebSocketServer(server);
 
+  //create new users and their roles
+  app.get('/init-users', async (req, res) => {
+    const fakeUsers = [
+      { name: 'ana', pass: '1234', roles: [1] },
+      { name: 'julia', pass: '1234', roles: [1] },
+      { name: 'carla', pass: '1234', roles: [1] },
+      { name: 'ines', pass: '1234', roles: [1] },
+      { name: 'super', pass: '1234', roles: [0] } 
+    ];
+  
+    let output = '<h1>Resultado de la creación:</h1><ul>';
+  
+    for (const u of fakeUsers) {
+      try {
+        const password = hashPassword(u.pass);
+        await db.connection!.run(
+          'INSERT INTO users (username, password, roles) VALUES (?, ?, ?)',
+          u.name, 
+          password, 
+          JSON.stringify(u.roles)
+        );
+        output += `<li>Usuario <b>${u.name}</b> creado (Pass: ${u.pass})</li>`;
+      } catch (error) {
+        output += `<li>Usuario <b>${u.name}</b> ya existía (no se ha tocado)</li>`;
+      }
+    }
+    
+    res.send(output );
+  });
+
+
   const port = process.env.PORT || 3000;
   server.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
+
+
 }
 
 console.log(`Backend ${APP_VERSION} is starting...`);
