@@ -43,7 +43,9 @@ export const teamTableDef = {
     name: { type: 'TEXT' },
     longname: { type: 'TEXT' },
     color: { type: 'TEXT', skipFiltering: true },
-    has_avatar: { type: 'INTEGER', skipFiltering: true }
+    has_avatar: { type: 'INTEGER', skipFiltering: true },
+    lat: { type: 'REAL', skipFiltering: true },
+    lon: { type: 'REAL', skipFiltering: true }
   }
 };
 
@@ -133,6 +135,7 @@ export async function createSchemaAndData(): Promise<void> {
       faker.date.birthdate({ min: 1950, max: 2007, mode: 'year' }),
       faker.internet.email(options).toLowerCase()
     );
+
     await db.connection!.run(
       'INSERT INTO persons (firstname, lastname, birthdate, email) VALUES (?, ?, ?, ?)',
       fakePerson.firstname, fakePerson.lastname, fakePerson.birthdate, fakePerson.email
@@ -143,17 +146,27 @@ export async function createSchemaAndData(): Promise<void> {
   const createTeamsStatement = createTableStatement(teamTableDef);
   await db.connection!.run(createTeamsStatement);
   console.log('Teams table created');
-  const teamsNum: number = parseInt(process.env.DBFAKETEAMS || '10') || 10;
-  for(let i = 0; i < teamsNum; i++) { 
-    const name = faker.company.name();
-    await db.connection!.run('INSERT INTO teams (name, longname, color, has_avatar) VALUES (?, ?, ?, ?)',
-      initials(name),
-      name,
+
+  const fixedTeams = [
+    { name: 'Dev', longname: 'Development Team', lat: 40.416729, lon: -3.703339 }, // Puerta del Sol
+    { name: 'Mkt', longname: 'Marketing Team', lat: 40.415511, lon: -3.707401 },   // Plaza Mayor
+    { name: 'Sales', longname: 'Sales Force', lat: 40.419688, lon: -3.705886 },    // Callao
+    { name: 'HR', longname: 'Human Resources', lat: 40.4180, lon: -3.6970 }        // Cibeles
+  ];
+
+  for(const t of fixedTeams) {
+    await db.connection!.run(
+      'INSERT INTO teams (name, longname, color, has_avatar, lat, lon) VALUES (?, ?, ?, ?, ?, ?)',
+      t.name,
+      t.longname,
       COLORS[Math.floor(Math.random() * COLORS.length)],
-      0
+      0,
+      t.lat,
+      t.lon
     );
   }
-  console.log(`${teamsNum} fake teams data created`);
+  
+  console.log(`Fake teams data created`);
 
   const createMembershipsStatement = createTableStatement(membershipTableDef);
   await db.connection!.run(createMembershipsStatement);

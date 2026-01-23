@@ -75,11 +75,11 @@ teamsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) =>
 });
 
 teamsRouter.post('/', requireRole([0]), async (req: Request, res: Response) => {
-  const { name, longname, color, has_avatar } = req.body; // assume body has correct shape so name is present
+  const { name, longname, color, has_avatar, lat, lon } = req.body; // assume body has correct shape so name is present
   try {
-    const newTeam = new Team(name, longname, color, has_avatar);
-    const addedTeam = await db!.connection!.get('INSERT INTO teams (name, longname, color, has_avatar) VALUES (?, ?, ?, ?) RETURNING *',
-      newTeam.name, newTeam.longname, newTeam.color, newTeam.has_avatar
+    const newTeam = new Team(name, longname, color, has_avatar, lat, lon);
+    const addedTeam = await db!.connection!.get('INSERT INTO teams (name, longname, color, has_avatar, lat, lon) VALUES (?, ?, ?, ?, ?, ?) RETURNING *',
+      newTeam.name, newTeam.longname, newTeam.color, newTeam.has_avatar, newTeam.lat, newTeam.lon
     );
 
     const userId = (req as any).user ? (req as any).user.id : null;
@@ -95,15 +95,15 @@ teamsRouter.post('/', requireRole([0]), async (req: Request, res: Response) => {
 });
 
 teamsRouter.put('/', requireRole([0]), async (req: Request, res: Response) => {
-  const { id, name, longname, color, has_avatar } = req.body;
+  const { id, name, longname, color, has_avatar, lat, lon } = req.body;
   try {
     if (typeof id !== 'number' || id <= 0) {
       throw new HttpError(400, 'ID was not provided correctly');
     }
-    const TeamToUpdate = new Team(name, longname, color, has_avatar);
+    const TeamToUpdate = new Team(name, longname, color, has_avatar, lat, lon);
     TeamToUpdate.id = id;  // retain the original id
-    const updatedTeam = await db!.connection!.get('UPDATE teams SET name = ?, longname = ?, color = ?, has_avatar = ? WHERE id = ? RETURNING *',
-      TeamToUpdate.name, TeamToUpdate.longname, TeamToUpdate.color, TeamToUpdate.has_avatar, TeamToUpdate.id
+    const updatedTeam = await db!.connection!.get('UPDATE teams SET name = ?, longname = ?, color = ?, has_avatar = ?, lat = ?, lon = ? WHERE id = ? RETURNING *',
+      TeamToUpdate.name, TeamToUpdate.longname, TeamToUpdate.color, TeamToUpdate.has_avatar, TeamToUpdate.lat, TeamToUpdate.lon, TeamToUpdate.id
     );
     if (updatedTeam) {
       if(!has_avatar) {

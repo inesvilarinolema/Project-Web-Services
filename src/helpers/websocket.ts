@@ -5,6 +5,14 @@ import { SessionData } from 'express-session';
 import { WebSocketServer, WebSocket } from 'ws';
 import { findUserByIdSafe, sessionStore } from './auth';
 import { User } from '../model/user';
+import { db } from './sysdb';
+
+export interface Lock {
+  username: string; // Quién lo tiene
+  at: number;       // Cuándo
+}
+
+export const activeLocks = new Map<string, Lock>();
 
 interface WSMessage {
   type: string;
@@ -104,6 +112,8 @@ export function attachWebSocketServer(server: http.Server) {
 
     clients.set(ws, client);
 
+    const wsUser = ws as WSWithUser;
+
     ws.on('message', raw => {
       let msg: WSMessage;
 
@@ -116,8 +126,35 @@ export function attachWebSocketServer(server: http.Server) {
       }
     });
 
-    ws.on('close', () => clients.delete(ws));
-    ws.on('error', () => clients.delete(ws));
+    ws.on('close', () => {
+        clients.delete(wsUser);
+
+        if (wsUser.user && wsUser.user.id) {
+            const myUsername = wsUser.user.username;
+            console.log(`Usuario ${myUsername} salió. Limpiando sus locks de memoria...`);
+            
+            let changes = false;
+            
+            for (const [key, lock] of activeLocks.entries()) {
+                if (lock.username === myUsername) {
+                    activeLocks.delete(key); 
+                    changes = true;
+                    console.log(`Lock liberado automáticamente: ${key}`);
+                }
+            }
+
+            if (changes) {
+                broadcast([0, 1], { 
+                    type: 'lockUpdate', 
+                    data: { action: 'unlock_all', userId: wsUser.user.id } 
+                });
+            }
+        }
+    });
+
+    ws.on('error', () => {
+        clients.delete(wsUser);
+    });
   });
 
   setInterval(() => {

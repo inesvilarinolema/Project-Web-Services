@@ -215,7 +215,7 @@ personsRouter.delete('/', requireRole([0]), async (req: Request, res: Response) 
         await Audit.log(userId, 'DELETE', 'persons', id, 'Person deleted');
       }
 
-      broadcast([0,1], {type: 'membershipsUpdate'});
+      broadcast([0,1], {type: 'membershipsUpdate', data: 'Reload needed'});
 
       res.json(deletedPerson); // return the deleted person
     } else {

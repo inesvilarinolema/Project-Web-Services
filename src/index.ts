@@ -17,6 +17,7 @@ import { auditRouter } from './api/audit';
 import { openSessionsDb } from './helpers/sessionsdb';
 import { activeUsersRouter } from './api/active-users';
 import { lockRouter } from './helpers/lock-manage';
+import { mapRouter } from './api/map';
 
 import { hashPassword } from './helpers/auth';
 import { db } from './helpers/sysdb';
@@ -66,6 +67,7 @@ async function main() {
   app.use('/api/audit', auditRouter);
   app.use('/api/active-users', activeUsersRouter);
   app.use('/api/locks', lockRouter);
+  app.use('/api/map', mapRouter);
   // install our error handler (must be the last app.use)
   app.use(errorHandler);
 

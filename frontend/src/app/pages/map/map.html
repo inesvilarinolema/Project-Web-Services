@@ -1,0 +1,26 @@
+<div class="container" style="padding: 20px;">
+  <h1>Team Locations & Walking Distances</h1>
+
+  <div id="map" style="height: 450px; width: 100%; border-radius: 8px; margin-bottom: 30px; border: 2px solid #ccc;"></div>
+
+  <div *ngIf="teams.length > 0">
+    <h3>Walking Distances Matrix (via OSRM)</h3>
+    <table border="1" style="width: 100%; border-collapse: collapse; text-align: center;">
+      <thead>
+        <tr style="background-color: #eee;">
+          <th style="padding: 10px;">From \ To</th>
+          <th *ngFor="let t of teams">{{ t.name }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of matrix; let i = index">
+          <td style="font-weight: bold; background-color: #f9f9f9; padding: 8px;">{{ teams[i].name }}</td>
+          
+          <td *ngFor="let dist of row; let j = index" [style.background-color]="i===j ? '#eee' : 'white'">
+            {{ formatDistance(dist) }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

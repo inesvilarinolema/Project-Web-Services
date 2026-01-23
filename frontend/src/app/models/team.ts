@@ -5,4 +5,6 @@ export interface Team {
   color: string;
   has_avatar: boolean;
   member_count?: number;
+  lat?: number;
+  lon?: number;
 }

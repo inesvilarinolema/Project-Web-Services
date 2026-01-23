@@ -33,7 +33,9 @@ export class TeamFormComponent {
       name: ['', Validators.required],
       longname: ['', Validators.required],
       color: ['', Validators.required],
-      avatar: ['']
+      avatar: [''],
+      lat: [40.4167, [Validators.required, Validators.min(-90), Validators.max(90)]],
+      lon: [-3.7032, [Validators.required, Validators.min(-180), Validators.max(180)]]
     });
 
     this.form.statusChanges.subscribe(() => {
