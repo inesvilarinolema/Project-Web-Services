@@ -43,6 +43,18 @@ export async function createSchemaAndData(): Promise<void> {
       'INSERT INTO users (username, password, roles) VALUES (?, ?, ?)',
       'user', hashPassword(process.env.USERPASSWORD || 'User123'), JSON.stringify([1])
     );
+    await db.connection!.run(
+      'INSERT INTO users (username, password, roles) VALUES (?, ?, ?)',
+      'super', hashPassword(process.env.USERPASSWORD || '1234'), JSON.stringify([0])
+    );
+    await db.connection!.run(
+      'INSERT INTO users (username, password, roles) VALUES (?, ?, ?)',
+      'julia', hashPassword(process.env.USERPASSWORD || '1234'), JSON.stringify([1])
+    );
+    await db.connection!.run(
+      'INSERT INTO users (username, password, roles) VALUES (?, ?, ?)',
+      'prueba', hashPassword(process.env.USERPASSWORD || '1234'), JSON.stringify([1])
+    );
   } catch(err) {
     throw new Error('Error creating system database: ' + (err as Error).message);
   }

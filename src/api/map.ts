@@ -5,34 +5,30 @@ export const mapRouter = Router();
 
 mapRouter.get('/', async (req, res, next) => {
     try {
-        const teams = await db.connection!.all('SELECT * FROM teams WHERE lat IS NOT NULL AND lon IS NOT NULL');
+        const teams = await db.connection!.all('SELECT * FROM teams WHERE latitude IS NOT NULL AND longitude IS NOT NULL');
 
         if (teams.length < 2) {
             return res.json({ teams, matrix: [] });
         }
 
-        const coordinatesString = teams
-            .map((t: any) => `${t.lon},${t.lat}`)
+        const coordsString = teams
+            .map((t: any) => `${t.longitude},${t.latitude}`)
             .join(';');
 
-        const osrmUrl = `http://router.project-osrm.org/table/v1/walking/${coordinatesString}?annotations=distance`;
+        const url = `http://router.project-osrm.org/table/v1/walking/${coordsString}?annotations=distance`;
 
-        console.log(' Consultando OSRM:', osrmUrl);
-
-        const response = await fetch(osrmUrl);
+        console.log('Consultando OSRM:', url);
         
-        if (!response.ok) {
-            throw new Error(`Error OSRM: ${response.statusText}`);
-        }
-
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Error en OSRM API');
+        
         const data = await response.json();
-
-        
-        res.json({teams: teams,matrix: data.distances
+        res.json({
+            teams: teams,
+            matrix: data.distances
         });
 
     } catch (error) {
-        console.error('Error en map-router:', error);
-        res.status(500).json({ error: 'Failed to fetch map data' });
+        next(error);
     }
 });

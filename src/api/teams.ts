@@ -9,6 +9,15 @@ import { Audit } from "../model/audit";
 
 export const teamsRouter = Router();
 
+const mapRowToTeam = (row: any) => {
+  if (!row) return null;
+  const { latitude, longitude, ...rest } = row;
+  return {
+    ...rest,
+    location: (latitude !== null && longitude !== null) ? { latitude, longitude } : null
+  };
+};
+
 teamsRouter.get('/:id/members', requireRole([0, 1]), async (req: Request, res: Response) => {
   const teamId = parseInt(req.params.id, 10);
   try {
@@ -27,9 +36,10 @@ teamsRouter.get('/:id/members', requireRole([0, 1]), async (req: Request, res: R
 
 // teams endpoints
 teamsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) => {
+
   let query = `
     SELECT
-      id, name, longname, color, has_avatar,
+      id, name, longname, color, has_avatar, latitude, longitude,
       (
         SELECT COUNT(*)
         FROM memberships m
@@ -71,15 +81,23 @@ teamsRouter.get('/', requireRole([0, 1]), async (req: Request, res: Response) =>
     sqlParams.push(offset);
   }
   const teams = await db!.connection!.all(query, sqlParams);
-  res.json(teams);
+  const result = teams.map(mapRowToTeam);
+  res.json(result);
 });
 
-teamsRouter.post('/', requireRole([0]), async (req: Request, res: Response) => {
-  const { name, longname, color, has_avatar, lat, lon } = req.body; // assume body has correct shape so name is present
+
+teamsRouter.post('/', requireRole([0]), async (req: Request<{}, {}, Team>, res: Response) => {
+  const { name, longname, color, has_avatar, location} = req.body; // assume body has correct shape so name is present
   try {
-    const newTeam = new Team(name, longname, color, has_avatar, lat, lon);
-    const addedTeam = await db!.connection!.get('INSERT INTO teams (name, longname, color, has_avatar, lat, lon) VALUES (?, ?, ?, ?, ?, ?) RETURNING *',
-      newTeam.name, newTeam.longname, newTeam.color, newTeam.has_avatar, newTeam.lat, newTeam.lon
+    const newTeam = new Team(name, longname, color, has_avatar, location);
+    const addedTeam = await db!.connection!.get(
+      'INSERT INTO teams (name, longname, color, has_avatar, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?) RETURNING *',
+      newTeam.name, 
+      newTeam.longname, 
+      newTeam.color, 
+      newTeam.has_avatar, 
+      newTeam.location?.latitude ?? null, 
+      newTeam.location?.longitude ?? null
     );
 
     const userId = (req as any).user ? (req as any).user.id : null;
@@ -87,34 +105,35 @@ teamsRouter.post('/', requireRole([0]), async (req: Request, res: Response) => {
       await Audit.log(userId, 'CREATE', 'teams', newTeam.id, `Team '${name}' added`);
     }
 
-    res.json(addedTeam); // return the newly created Team; alternatively, you may consider returning the full list of teams
-
+    res.json(mapRowToTeam(addedTeam)); // return the newly created Team; alternatively, you may consider returning the full list of teams
   } catch (error: Error | any) {
     throw new HttpError(400, 'Cannot add team: ' + error.message); // bad request; validation or database error
   }
 });
 
-teamsRouter.put('/', requireRole([0]), async (req: Request, res: Response) => {
-  const { id, name, longname, color, has_avatar, lat, lon } = req.body;
+teamsRouter.put('/', requireRole([0]), async (req: Request<{}, {}, Team>, res: Response) => {
+  const { id, name, longname, color, has_avatar, location } = req.body;
   try {
     if (typeof id !== 'number' || id <= 0) {
       throw new HttpError(400, 'ID was not provided correctly');
     }
-    const TeamToUpdate = new Team(name, longname, color, has_avatar, lat, lon);
+    const TeamToUpdate = new Team(name, longname, color, has_avatar, location);
     TeamToUpdate.id = id;  // retain the original id
-    const updatedTeam = await db!.connection!.get('UPDATE teams SET name = ?, longname = ?, color = ?, has_avatar = ?, lat = ?, lon = ? WHERE id = ? RETURNING *',
-      TeamToUpdate.name, TeamToUpdate.longname, TeamToUpdate.color, TeamToUpdate.has_avatar, TeamToUpdate.lat, TeamToUpdate.lon, TeamToUpdate.id
+    const updatedTeam = await db!.connection!.get('UPDATE teams SET name = ?, longname = ?, color = ?, has_avatar = ?, latitude = ?, longitude = ? WHERE id = ? RETURNING *',
+      TeamToUpdate.name, TeamToUpdate.longname, TeamToUpdate.color, TeamToUpdate.has_avatar, TeamToUpdate.location?.latitude ?? null, TeamToUpdate.location?.longitude ?? null, TeamToUpdate.id
     );
+
     if (updatedTeam) {
       if(!has_avatar) {
         deleteUploadedFile(id.toString() + '.png', 'avatar'); // delete associated avatar file if exists
       }
+
       const userId = (req as any).user ? (req as any).user.id : null;
       if(userId){
         await Audit.log(userId, 'UPDATE', 'teams', id, `Team '${name}' updated`);
       }
       
-      res.json(updatedTeam); // return the updated Team
+      res.json(mapRowToTeam(updatedTeam)); // return the updated Team
     } else {
       throw new HttpError(404, 'Team to update not found');
     }
@@ -131,12 +150,13 @@ teamsRouter.delete('/', requireRole([0]), async (req: Request, res: Response) =>
   const deletedTeam = await db!.connection!.get('DELETE FROM teams WHERE id = ? RETURNING *', id);
   if (deletedTeam) {
     deleteUploadedFile(id.toString() + '.png', 'avatar'); // delete associated avatar file if exists
+    
     const userId = (req as any).user ? (req as any).user.id : null;
     if(userId){
       await Audit.log(userId, 'DELETE', 'teams', id, `Team deleted`);
     }
-    
-    res.json(deletedTeam); // return the deleted Team
+
+    res.json(mapRowToTeam(deletedTeam)); // return the deleted Team
   } else {
     throw new HttpError(404, 'Team to delete not found');
   }

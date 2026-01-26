@@ -22,6 +22,7 @@ import { AuthService } from '../../services/auth';
   imports: [CommonModule, MatSortModule, MatTableModule, MatChipsModule, MatProgressSpinnerModule],
   standalone: true
 })
+
 export class TeamsTableComponent {
   displayedColumns: string[] = ['id', 'name', 'avatar', 'longname', 'member_count'];
   teams: Team[] = [];
@@ -63,7 +64,8 @@ export class TeamsTableComponent {
   openDialog(row: Team | null) {
     if (!this.isInRole([0])) return;
     const dialogRef = this.dialog.open(EditTeamDialog, {
-      width: '75%',
+      width: '100%',
+      maxWidth: '75vw',
       data: { row }
     });
     dialogRef.afterClosed().subscribe(result => {

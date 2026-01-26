@@ -10,12 +10,14 @@ import { MatIcon } from '@angular/material/icon';
 
 import { Team } from '../../models/team';
 import { COLORS } from '../../../../../src/shared/colors';
+import { LocationComponent } from "../location/location";
+import { GeoPoint } from '../../models/geopoint';
 
 @Component({
   selector: 'team-form',
   templateUrl: './team-form.html',
   styleUrls: ['./team-form.scss'],
-  imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatInputModule, MatButtonModule, MatSelectModule, MatOptionModule, MatIcon ],
+  imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatInputModule, MatButtonModule, MatSelectModule, MatOptionModule, MatIcon, LocationComponent],
   standalone: true
 })
 export class TeamFormComponent {
@@ -34,8 +36,7 @@ export class TeamFormComponent {
       longname: ['', Validators.required],
       color: ['', Validators.required],
       avatar: [''],
-      lat: [40.4167, [Validators.required, Validators.min(-90), Validators.max(90)]],
-      lon: [-3.7032, [Validators.required, Validators.min(-180), Validators.max(180)]]
+      location: this.fb.control<GeoPoint | null>(null)
     });
 
     this.form.statusChanges.subscribe(() => {
@@ -43,12 +44,28 @@ export class TeamFormComponent {
     });
   }
 
-  ngOnChanges(changes: SimpleChanges) {
+ ngOnChanges(changes: SimpleChanges) {
     if (changes['row'] && this.row) {
-      this.form.patchValue(this.row);
+      
+      console.log('Datos recibidos en TeamForm:', this.row); // Para depurar
+
+      let finalLocation = null;
+
+      if (this.row.location) {
+        finalLocation = this.row.location;
+      } 
+      else if (this.row.latitude != null && this.row.longitude != null) {
+        finalLocation = { latitude: this.row.latitude, longitude: this.row.longitude };
+      }
+      this.form.patchValue({
+        ...this.row,
+        location: finalLocation
+      });
+
       this.validChange.emit(this.form.valid);
     }
   }
+
 
   ngAfterViewInit() {
     this.form.markAllAsTouched();
@@ -82,4 +99,25 @@ export class TeamFormComponent {
       this.row.has_avatar = false;
     }
   }
+
+  onLocationChange(newLocation: GeoPoint) {
+    //console.log('Mapa movido. Nuevas coordenadas:', newLocation);
+    
+    this.form.patchValue({ location: newLocation });
+    this.form.markAsDirty();
+  }
+
+  locateMe() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition((position) => {
+      const coords = { 
+        latitude: position.coords.latitude, 
+        longitude: position.coords.longitude 
+      };
+      this.onLocationChange(coords);
+    });
+  } else {
+    alert("Tu navegador no soporta geolocalización");
+  }
+}
 }

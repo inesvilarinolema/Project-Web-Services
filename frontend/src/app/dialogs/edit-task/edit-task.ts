@@ -110,7 +110,6 @@ export class EditTaskDialog {
   }
 
   onFormValidChange(valid: boolean) {
-    console.log('PADRE RECIBE VALIDEZ:', valid); // <--- Para ver si llega
     this.formValid = valid;
     this.cdr.detectChanges(); 
   }

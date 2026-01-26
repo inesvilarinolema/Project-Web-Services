@@ -28,7 +28,6 @@ export class MapPageComponent implements OnInit {
         this.teams = res.teams;
         this.matrix = res.matrix;
         
-        // Esperamos un pelín para asegurar que el HTML existe antes de pintar el mapa
         setTimeout(() => {
           this.initMap();
         }, 100);
@@ -51,8 +50,13 @@ export class MapPageComponent implements OnInit {
     L.Marker.prototype.options.icon = DefaultIcon;
 
     // 2. Centramos el mapa en el primer equipo
-    const startLat = this.teams[0].lat;
-    const startLon = this.teams[0].lon;
+    const startLat = this.teams[0].latitude;
+    const startLon = this.teams[0].longitude;
+
+    if (startLat === undefined || startLon === undefined) {
+        console.error('Las coordenadas son undefined. Revisa que el backend envíe "latitude" y "longitude".');
+        return;
+    }
 
     this.map = L.map('map').setView([startLat, startLon], 14);
 
@@ -62,20 +66,19 @@ export class MapPageComponent implements OnInit {
       attribution: '© OpenStreetMap'
     }).addTo(this.map);
 
-    // 4. Ponemos las chinchetas 📍
     const bounds = L.latLngBounds([]); // Para auto-ajustar el zoom
     
     this.teams.forEach(team => {
-      const marker = L.marker([team.lat, team.lon]).addTo(this.map);
+      if (team.latitude == null || team.longitude == null) return;
+
+      const marker = L.marker([team.latitude, team.longitude]).addTo(this.map);
       marker.bindPopup(`<b>${team.name}</b><br>${team.longname || ''}`);
-      bounds.extend([team.lat, team.lon]);
+      bounds.extend([team.latitude, team.longitude]);
     });
 
-    // 5. Ajustar zoom para que quepan todos
     this.map.fitBounds(bounds, { padding: [50, 50] });
   }
 
-  // Helper para poner bonito los metros/km
   formatDistance(meters: number): string {
     if (meters === 0) return '-';
     if (meters < 1000) return Math.round(meters) + ' m';
