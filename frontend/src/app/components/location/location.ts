@@ -7,119 +7,131 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 @Component({
-  selector: 'location',
-  templateUrl: './location.html',
-  styleUrls: ['./location.scss'],
-  imports: [],
-  standalone: true
+	selector: 'location',
+	templateUrl: './location.html',
+	styleUrls: ['./location.scss'],
+	imports: [],
+	standalone: true
 })
+
+
 export class LocationComponent implements AfterViewInit, OnDestroy, OnChanges{
-  constructor(private zone: NgZone) {}
+	constructor(private zone: NgZone) {}
 
-  @ViewChild('mapContainer', { static: true })
-  mapContainer!: ElementRef<HTMLDivElement>;
+	//Reference the div where the map will be rendered
+	@ViewChild('mapContainer', { static: true })
+	mapContainer!: ElementRef<HTMLDivElement>;
 
-  @Input() location?: GeoPoint;
-  @Output() locationChange = new EventEmitter<GeoPoint>();
-  
-  private map!: L.Map;
-  private marker?: L.Marker;
-  private resizeObserver!: ResizeObserver;
-  private resizeScheduled = false;
+	//Current coordinates
+	@Input() location?: GeoPoint;
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['location'] && this.location && this.map) {
-      this.updateMarkerVisuals(this.location);
-    }
-  }
-  
-  private initMap() {
-    delete (L.Icon.Default.prototype as any)._getIconUrl;
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl: markerIcon2x,
-      iconUrl: markerIcon,
-      shadowUrl: markerShadow,
-    });
+	//Emits when the user changes de the location
+	@Output() locationChange = new EventEmitter<GeoPoint>();
+	
+	private map!: L.Map;
+	private marker?: L.Marker;
+	private resizeObserver!: ResizeObserver;
+	private resizeScheduled = false;
 
-    this.map = L.map(this.mapContainer.nativeElement).setView(
-      [51.759248, 19.455983],
-      12
-    );
+	//Updates the marker position if the parent component changes
+	ngOnChanges(changes: SimpleChanges) {
+		if (changes['location'] && this.location && this.map) {
+			this.updateMarkerVisuals(this.location);
+		}
+	}
+	
+	//Initializes the leaflet map
+	private initMap() {
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(this.map);
+		delete (L.Icon.Default.prototype as any)._getIconUrl;
+		L.Icon.Default.mergeOptions({
+			iconRetinaUrl: markerIcon2x,
+			iconUrl: markerIcon,
+			shadowUrl: markerShadow,
+		});
 
-    this.map.on('click', (e: L.LeafletMouseEvent) => {
-      const newPos = { latitude: e.latlng.lat, longitude: e.latlng.lng };
-      this.updateMarkerVisuals(newPos);
-      this.locationChange.emit(newPos);
-    });
+		//Create map instance centerd on a default location
+		this.map = L.map(this.mapContainer.nativeElement).setView(
+			[51.759248, 19.455983],
+			12
+		);
 
-    if (this.location) {
-      this.setMarker(this.location);
-      this.updateMarkerVisuals(this.location);
-      this.map.setView([this.location.latitude, this.location.longitude], 12);
-    }
+		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			attribution: '&copy; OpenStreetMap contributors'
+		}).addTo(this.map);
 
-    setTimeout(() => this.map.invalidateSize(), 0);
-  }
+		//Event -> move marker to clicked location
+		this.map.on('click', (e: L.LeafletMouseEvent) => {
+			const newPos = { latitude: e.latlng.lat, longitude: e.latlng.lng };
+			this.updateMarkerVisuals(newPos);
+			this.locationChange.emit(newPos); //Notify parent
+		});
 
-  private setMarker(location: GeoPoint) {
-    if (this.marker) {
-      this.marker.setLatLng([location.latitude, location.longitude]);
-    } else {
-      this.marker = L.marker([location.latitude, location.longitude], { draggable: true }).addTo(this.map);
+		//Set initial marker if location exists
+		if (this.location) {
+			this.setMarker(this.location);
+			this.updateMarkerVisuals(this.location);
+			this.map.setView([this.location.latitude, this.location.longitude], 12);
+		}
 
-      this.marker.on('dragend', () => {
-        const pos = this.marker!.getLatLng();
-        this.locationChange.emit({ latitude: pos.lat, longitude: pos.lng });
-      });
-    }
-    this.locationChange.emit(location);
-  }
+		//Force redraw
+		setTimeout(() => this.map.invalidateSize(), 0);
+	}
 
-  
-  private initResizeObserver(): void {
-    this.resizeObserver = new ResizeObserver(() => {
-      if (this.resizeScheduled || !this.map) {
-        return;
-      }
+	//Setup logic, handles creation, position updates
+	private setMarker(location: GeoPoint) {
+		this.updateMarkerVisuals(location);
+		this.locationChange.emit(location);
+	}
 
-      this.resizeScheduled = true;
+	
+	//Prevent the map from looking gray or incomplete when the map's size change
+	private initResizeObserver(): void {
+		this.resizeObserver = new ResizeObserver(() => {
+			if (this.resizeScheduled || !this.map) {
+				return;
+			}
 
-      this.zone.runOutsideAngular(() => {
-        requestAnimationFrame(() => {
-          this.map.invalidateSize();
-          this.resizeScheduled = false;
-        });
-      });
-    });
+			this.resizeScheduled = true;
 
-    this.resizeObserver.observe(this.mapContainer.nativeElement);
-  }
+			this.zone.runOutsideAngular(() => {
+				requestAnimationFrame(() => {
+					this.map.invalidateSize();
+					this.resizeScheduled = false;
+				});
+			});
+		});
 
-  ngAfterViewInit() {
-    this.initMap();
-    this.initResizeObserver();  
-  }
+		this.resizeObserver.observe(this.mapContainer.nativeElement);
+	}
 
-  ngOnDestroy() {
-    this.resizeObserver?.disconnect();
-    this.map?.remove();
-  }
+	ngAfterViewInit() {
+		this.initMap();
+		this.initResizeObserver();  
+	}
 
-  private updateMarkerVisuals(location: GeoPoint) {
-    if (this.marker) {
-      this.marker.setLatLng([location.latitude, location.longitude]);
-    } else {
-      this.marker = L.marker([location.latitude, location.longitude], { draggable: true }).addTo(this.map);
+	ngOnDestroy() {
+		this.resizeObserver?.disconnect();
+		this.map?.remove();
+	}
 
-      this.marker.on('dragend', () => {
-        const pos = this.marker!.getLatLng();
-        this.locationChange.emit({ latitude: pos.lat, longitude: pos.lng });
-      });
-    }
-  }
-  
+	//Helper to update o create the marker without reemitting the event inmmediately
+	private updateMarkerVisuals(location: GeoPoint) {
+		//Marker already exist -> just move it
+		if (this.marker) {
+			this.marker.setLatLng([location.latitude, location.longitude]);
+			return;
+		}
+
+		//Marker doesn't exist -> Create it
+		this.marker = L.marker([location.latitude, location.longitude], { draggable: true })
+		.addTo(this.map);
+
+		//Attach drag event listener strictly once upon creation
+		this.marker.on('dragend', () => {
+			const pos = this.marker!.getLatLng();
+			this.locationChange.emit({ latitude: pos.lat, longitude: pos.lng });
+		});
+	}
+	
 }

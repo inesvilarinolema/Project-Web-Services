@@ -1,16 +1,16 @@
 <div class="mat-dialog-title">{{ data.row ? 'Modify Task' : 'New Task' }}</div>
 
 <div class="mat-dialog-content">
-  <task-form [task]="data.row" (validChange)="onFormValidChange($event)"></task-form>
+	<task-form [task]="data.row" (validChange)="onFormValidChange($event)"></task-form>
 </div>
 
 <div mat-dialog-actions>
-  <button mat-stroked-button mat-dialog-close>Cancel</button>
+	<button mat-stroked-button mat-dialog-close>Cancel</button>
 
-  @if(data.row) {
-    <button mat-raised-button color="primary" (click)="onDelete()">Delete</button>
-    <button mat-raised-button color="primary" [disabled]="!formValid" (click)="onModify()">Modify</button>
-  } @else {
-    <button mat-raised-button color="primary" [disabled]="!formValid" (click)="onAdd()">Add</button>
-  }
+	@if(data.row) {
+		<button mat-raised-button color="primary" (click)="onDelete()">Delete</button>
+		<button mat-raised-button color="primary" [disabled]="!formValid" (click)="onModify()">Modify</button>
+	} @else {
+		<button mat-raised-button color="primary" [disabled]="!formValid" (click)="onAdd()">Add</button>
+	}
 </div>

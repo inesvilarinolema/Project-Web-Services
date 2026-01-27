@@ -1,19 +1,19 @@
 
 <div class="gantt-wrapper" *ngIf="bars.length > 0">
-  
-  <div class="axis-labels">
-    <span>{{ minDateDisplay | date:'mediumDate' }}</span>
-    <span>Today ({{ maxDateDisplay | date:'mediumDate' }})</span>
-  </div>
+	
+	<div class="axis-labels">
+		<span>{{ minDateDisplay | date:'mediumDate' }}</span>
+		<span>Today ({{ maxDateDisplay | date:'mediumDate' }})</span>
+	</div>
 
-  <div class="chart-container">
-    <div class="task-row" *ngFor="let bar of bars">
-      <div class="bar" 
-           [ngStyle]="bar.style"
-           [matTooltip]="bar.tooltip">
-        <span class="bar-text">{{ bar.name }}</span>
-      </div>
-    </div>
-  </div>
+	<div class="chart-container">
+		<div class="task-row" *ngFor="let bar of bars">
+			<div class="bar" 
+					 [ngStyle]="bar.style"
+					 [matTooltip]="bar.tooltip">
+				<span class="bar-text">{{ bar.name }}</span>
+			</div>
+		</div>
+	</div>
 
 </div>

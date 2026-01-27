@@ -3,32 +3,42 @@ import { db } from '../helpers/db';
 
 export const mapRouter = Router();
 
+/**
+ * GET /
+ * Retrieves teams with coordinates and calculates a distance matrix between them
+ * Uses USRM public API to get walking distances
+ */
 mapRouter.get('/', async (req, res, next) => {
-    try {
-        const teams = await db.connection!.all('SELECT * FROM teams WHERE latitude IS NOT NULL AND longitude IS NOT NULL');
+	try {
+		//Fetch teams that have valid GPS coordenates
+		const teams = await db.connection!.all('SELECT * FROM teams WHERE latitude IS NOT NULL AND longitude IS NOT NULL');
 
-        if (teams.length < 2) {
-            return res.json({ teams, matrix: [] });
-        }
+		//Need at least 2 points to calculate a distance
+		if (teams.length < 2) {
+			return res.json({ teams, matrix: [] });
+		}
 
-        const coordsString = teams
-            .map((t: any) => `${t.longitude},${t.latitude}`)
-            .join(';');
+		//Format coordinates for OSRM API
+		const coordsString = teams
+			.map((t: any) => `${t.longitude},${t.latitude}`)
+			.join(';');
 
-        const url = `http://router.project-osrm.org/table/v1/walking/${coordsString}?annotations=distance`;
+		const url = `http://router.project-osrm.org/table/v1/walking/${coordsString}?annotations=distance`;
 
-        console.log('Consultando OSRM:', url);
-        
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Error en OSRM API');
-        
-        const data = await response.json();
-        res.json({
-            teams: teams,
-            matrix: data.distances
-        });
+		//console.log('Consultando OSRM:', url);
+		
+		const response = await fetch(url);
+		if (!response.ok) throw new Error('Error in OSRM API');
+		
+		//Return combined data to frontend (matrix 2D array of distances in meters)
+		const data = await response.json();
+		res.json({
+			teams: teams,
+			matrix: data.distances
+		});
 
-    } catch (error) {
-        next(error);
-    }
+	} 
+	catch (error) {
+		next(error);
+	}
 });

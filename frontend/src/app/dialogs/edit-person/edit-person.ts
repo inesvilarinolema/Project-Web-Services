@@ -12,6 +12,8 @@ import { PersonsService } from '../../services/persons';
   templateUrl: './edit-person.html',
   styleUrls: ['./edit-person.scss']
 })
+
+
 export class EditPersonDialog {
 
     @ViewChild(PersonFormComponent) personForm!: PersonFormComponent;
@@ -25,16 +27,21 @@ export class EditPersonDialog {
         @Inject(MAT_DIALOG_DATA) public data: { row: Person }
     ) {}
 
+    //Handles creation of a new person
     onAdd(): void {
         if (this.personForm.form.valid) {
+
             const newPerson: Person = this.personForm.form.value;
+
             this.personsService.newPerson(newPerson).subscribe({
                 next: person => {
                     this.personsService.notifyReload(); // notify other components to reload the list
+                    
                     this.snackBar.open(`Person ${person.id} added`, 'Close', {
                         duration: 5000,
                         panelClass: ['snackbar-success']
                     });
+                    //close dialog and return result
                     this.dialogRef.close(person.id);
                 },
                 error: err => {
@@ -42,23 +49,28 @@ export class EditPersonDialog {
                         duration: 5000,
                         panelClass: ['snackbar-error']
                     });
+
                     this.dialogRef.close(null);
                 }
             });
         }
     }
 
+    //Handles updates to an existing person
     onModify(): void {
         if (this.personForm.form.valid) {
             const updatedPerson: Person = this.personForm.form.value;
-            updatedPerson.id = this.data.row.id;
+            updatedPerson.id = this.data.row.id; //ensure id is preserved
+
             this.personsService.modifyPerson(updatedPerson).subscribe({
                 next: person => {
-                    this.personsService.notifyReload(); // notify
+                    this.personsService.notifyReload(); 
+
                     this.snackBar.open(`Person ${person.id} modified`, 'Close', {
                         duration: 5000,
                         panelClass: ['snackbar-success']
                     });
+
                     this.dialogRef.close(person.id);
                 },
                 error: err => {
@@ -72,14 +84,17 @@ export class EditPersonDialog {
         }
     }
 
+    //Handles deletion
     onDelete() {
         this.personsService.deletePerson(this.data.row.id).subscribe({
             next: person => {
-                this.personsService.notifyReload(); // notify other components to reload the list
+                this.personsService.notifyReload(); //notify other components to reload the list
+                
                 this.snackBar.open(`Person ${person.id} deleted`, 'Close', {
                     duration: 5000,
                     panelClass: ['snackbar-success']
                 });
+
                 this.dialogRef.close(person.id);
             },
             error: err => {
@@ -87,11 +102,13 @@ export class EditPersonDialog {
                     duration: 5000,
                     panelClass: ['snackbar-error']
                 });
+
                 this.dialogRef.close();
             }
         });
     }
 
+    //Updates local state when the child form`s validty changes
     onFormValidChange(valid: boolean) {
         this.formValid = valid;
     }

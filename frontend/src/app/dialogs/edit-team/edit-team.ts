@@ -15,8 +15,9 @@ import { TeamsService } from '../../services/teams';
 export class EditTeamDialog {
 
     @ViewChild(TeamFormComponent) teamForm!: TeamFormComponent;
-
     formValid: boolean = false;
+
+    //UI state for upload progress
     uploading: boolean = false;
     uploadProgress: number = 0;
 
@@ -27,16 +28,21 @@ export class EditTeamDialog {
         @Inject(MAT_DIALOG_DATA) public data: { row: Team }
     ) {}
 
+    //Create team (sends the form and the selected file to service)
     onAdd(): void {
         if (this.teamForm.form.valid) {
             const newTeam: Team = this.teamForm.form.value;
+
+            //Call service passing the JSON and file object
             this.teamsService.newTeam(newTeam, this.teamForm.selectedFile).subscribe({
                 next: team => {
-                    this.teamsService.notifyReload(); // notify other components to reload the list
+                    this.teamsService.notifyReload(); //notify other components to reload the list
+                    
                     this.snackBar.open(`Team ${team.id} added`, 'Close', {
                         duration: 5000,
                         panelClass: ['snackbar-success']
                     });
+
                     this.dialogRef.close(team.id);
                 },
                 error: err => {
@@ -44,23 +50,28 @@ export class EditTeamDialog {
                         duration: 5000,
                         panelClass: ['snackbar-error']
                     });
+
                     this.dialogRef.close();
                 }
             });
         }
     }
 
+    //Update team
     onModify(): void {
         if (this.teamForm.form.valid) {
             const updatedTeam: Team = this.teamForm.form.value;
-            updatedTeam.id = this.data.row.id;
+            updatedTeam.id = this.data.row.id; //preserve ID
+
             this.teamsService.modifyTeam(updatedTeam, this.teamForm.selectedFile).subscribe({
                 next: team => {
                     this.teamsService.notifyReload(); // notify
+
                     this.snackBar.open(`Team ${team.id} modified`, 'Close', {
                         duration: 5000,
                         panelClass: ['snackbar-success']
                     });
+
                     this.dialogRef.close(team.id);
                 },
                 error: err => {
@@ -68,20 +79,25 @@ export class EditTeamDialog {
                         duration: 5000,
                         panelClass: ['snackbar-error']
                     });
+
                     this.dialogRef.close();
                 }
             });
         }
     }
 
+
+    //Delete team
     onDelete() {
         this.teamsService.deleteTeam(this.data.row.id).subscribe({
             next: team => {
-                this.teamsService.notifyReload(); // notify other components to reload the list
+                this.teamsService.notifyReload(); //notify other components to reload the list
+                
                 this.snackBar.open(`Team ${team.id} deleted`, 'Close', {
                     duration: 5000,
                     panelClass: ['snackbar-success']
                 });
+
                 this.dialogRef.close(team.id);
             },
             error: err => {
@@ -89,6 +105,7 @@ export class EditTeamDialog {
                     duration: 5000,
                     panelClass: ['snackbar-error']
                 });
+                
                 this.dialogRef.close();
             }
         });

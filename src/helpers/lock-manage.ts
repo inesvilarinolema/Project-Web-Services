@@ -5,79 +5,87 @@ import { broadcast, activeLocks } from './websocket';
 
 export const lockRouter = Router();
 
-
-//BLOCK (when we want to block)
+/* ->BLOCK 
+	Attempts to acquire a lock for a specific resource,
+	returns 409 if locked by someone else
+*/
 lockRouter.post('/:type/:id', (req: Request, res: Response) => {
-  
-  const {type, id} = req.params;
-  const key = `${type}:${id}`; 
-  
-  const user = req.user as User; 
+	
+	const {type, id} = req.params;
+	const key = `${type}:${id}`; //unique identifier for the resource
+	
+	const user = req.user as User; 
 
-  if (!user) {
-    res.status(401).json({ message: 'Who are you?' });
-    return;
-  }
+	//Ensure user is authenticated
+	if (!user) {
+		res.status(401).json({ message: 'Who are you?' });
+		return;
+	}
 
-  const existingLock = activeLocks.get(key);
+	const existingLock = activeLocks.get(key);
 
-  //IF IT IS ALREADY BLOCK?
-  if (existingLock) {
-    
-    //If it is my lock -> ok
-    if (existingLock.username === user.username) {
-        activeLocks.set(key, { username: user.username, at: Date.now() });
-        res.json({ success: true });
-        return;
-    } 
-    
-    //The lock belongs to someone else -> error
-    res.status(409).json({ 
-        message: `Locked by ${existingLock.username}`,
-        lockedBy: existingLock.username 
-    });
-    return;
-  }
+	//Check if resource is already locked
+	if (existingLock) {
+		
+		//A -> If it is locke by me
+		// -> Refresh the timestamp and return sucess
+		if (existingLock.username === user.username) {
+				activeLocks.set(key, { username: user.username, at: Date.now() });
+				res.json({ success: true });
+				return;
+		} 
+		
+		//B -> The lock belongs to someone else
+		// -> Deny the request
+		res.status(409).json({ 
+			message: `Locked by ${existingLock.username}`,
+			lockedBy: existingLock.username 
+		});
+		return;
+	}
 
-  //IF IT ISN`T BLOK -> we can block it
-  activeLocks.set(key, { username: user.username, at: Date.now() });
-  
-  console.log(`LOCK: ${key} locked by ${user.username}`);
+	//If the resource is free -> create the lock
+	activeLocks.set(key, { username: user.username, at: Date.now() });
+	
+	//console.log(`LOCK: ${key} locked by ${user.username}`);
+	
+	//Notify all connected clients via WS 
+	broadcast([0, 1], { 
+		type: 'lockUpdate', 
+		data: { action: 'lock', type, id, username: user.username } 
+	});
 
-  broadcast([0, 1], { 
-      type: 'lockUpdate', 
-      data: { action: 'lock', type, id, username: user.username } 
-  });
-
-  res.json({ success: true });
+	res.json({ success: true });
 });
 
-//UNLOCK -> when we finish
+/*
+-> DELETE
+Releases a lock on a resource
+*/
 lockRouter.delete('/:type/:id', (req: Request, res: Response) => {
 
-  const { type, id } = req.params;
-  const key = `${type}:${id}`;
-  const user = req.user as User;
+	const { type, id } = req.params;
+	const key = `${type}:${id}`;
+	const user = req.user as User;
 
-  if (!user) { 
-      res.status(401).send(); 
-      return; 
-  }
+	if (!user) { 
+			res.status(401).send(); 
+			return; 
+	}
 
-  const existingLock = activeLocks.get(key);
+	const existingLock = activeLocks.get(key);
 
-  //We can only unlock if -> i`m the owner and the lock exists
-  if (existingLock && existingLock.username === user.username) {
-    activeLocks.delete(key);
-    console.log(`UNLOCK: ${key} released by ${user.username}`);
-
-    broadcast([0, 1], { type: 'lockUpdate', data: { type, id } });  
-  }
-  
-  res.json({ success: true });
+	//We can only unlock if -> i`m the owner and the lock exists
+	if (existingLock && existingLock.username === user.username) {
+		activeLocks.delete(key);
+		console.log(`UNLOCK: ${key} released by ${user.username}`);
+		//Notify clients that the resource is now free
+		broadcast([0, 1], { type: 'lockUpdate', data: { type, id } });  
+	}
+	//Always return success
+	res.json({ success: true });
 });
 
-//ESTO SE PUEDE BORRAR DESPUES
-lockRouter.get('/', (req, res) => {
-    res.json(Object.fromEntries(activeLocks));
-});
+/*lockRouter.get('/', (req, res) => {
+		res.json(Object.fromEntries(activeLocks));
+});*/

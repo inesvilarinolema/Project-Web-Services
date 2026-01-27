@@ -50,6 +50,7 @@
                                 </span>
                             }
                         </mat-select-trigger>
+                        
                         @for (team of teams; track team.id) {
                             <mat-option [value]="team.id">
                                 <mat-chip class="team-chip" [style.background-color]="team.color" [ngStyle]="{

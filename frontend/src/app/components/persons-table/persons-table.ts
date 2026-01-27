@@ -15,189 +15,213 @@ import { AuthService } from '../../services/auth';
 import { LockService } from '../../services/lock';
 
 @Component({
-  selector: 'persons-table',
-  templateUrl: './persons-table.html',
-  styleUrls: ['./persons-table.scss'],
-  imports: [CommonModule, MatTableModule, MatSortModule, MatChipsModule, MatProgressSpinnerModule],
-  standalone: true
+	selector: 'persons-table',
+	templateUrl: './persons-table.html',
+	styleUrls: ['./persons-table.scss'],
+	imports: [CommonModule, MatTableModule, MatSortModule, MatChipsModule, MatProgressSpinnerModule],
+	standalone: true
 })
 
 export class PersonsTableComponent implements AfterViewInit, OnDestroy, OnInit{
-  
-  displayedColumns: string[] = ['id', 'firstname', 'lastname', 'birthdate', 'email', 'teams'];
-  persons: Person[] = [];
-  private observer?: IntersectionObserver;
+	
+	displayedColumns: string[] = ['id', 'firstname', 'lastname', 'birthdate', 'email', 'teams'];
+	persons: Person[] = [];
 
-  private _filter: string = '';
-  @Input()
-  set filter(value: string) {
-    if (value !== this._filter) {
-      this._filter = value;
-      this.resetAndLoad();
-    }
-  } // set private component _filter if parent component changes value of filter
+	private observer?: IntersectionObserver;
 
-  @Output() countsChange = new EventEmitter<{ total: number, filtered: number, order: number }>();
-  
-  @ViewChild('tableContainer') tableContainer!: ElementRef<HTMLDivElement>;
+	//Filtering logic
+	private _filter: string = '';
+	@Input()
+	set filter(value: string) {
+		//Reset and reaload table if the filter string changes
+		if (value !== this._filter) {
+			this._filter = value;
+			this.resetAndLoad();
+		}
+	}
 
-  getContrastColor: (color: string) => string;
-  user: User | null = null;
-  loading: boolean = false;
-  allLoaded: boolean = false;
-  offset: number = 0;
-  limit: number = 10;
-  order: number = 1;
-  timestamp = Date.now();
+	//emits table stats
+	@Output() countsChange = new EventEmitter<{ total: number, filtered: number, order: number }>();
+	
+	@ViewChild('tableContainer') tableContainer!: ElementRef<HTMLDivElement>;
 
-  @ViewChild('loadMore') loadMore!: ElementRef;
+	getContrastColor: (color: string) => string;
+	user: User | null = null;
 
-  constructor(
-    private authService: AuthService,
-    private colorsService: ColorsService,
-    private personsService: PersonsService,
-    private dialog: MatDialog,
-    private lockService: LockService 
-  ) {
-    this.authService.currentUser$.subscribe(user => { this.user = user; });
-    this.getContrastColor = this.colorsService.getContrastColor;
-  }
+	//Pagination & state
+	loading: boolean = false;
+	allLoaded: boolean = false;
+	offset: number = 0;
+	limit: number = 10;
+	order: number = 1;
+	timestamp = Date.now();
 
-  ngOnInit(): void {
-    this.loadData();
-    this.lockService.lockUpdate$.subscribe(() => {this.resetAndLoad();});
-  }
-  ngAfterViewInit() {
-    this.initObserver();
-    window.addEventListener('focus', this.onWindowFocus);
-  }
+	@ViewChild('loadMore') loadMore!: ElementRef;
 
-  ngOnDestroy() {
-    this.observer?.disconnect();
-    window.removeEventListener('focus', this.onWindowFocus);
-  }
+	constructor(
+		private authService: AuthService,
+		private colorsService: ColorsService,
+		private personsService: PersonsService,
+		private dialog: MatDialog,
+		private lockService: LockService 
+	) {
+		this.authService.currentUser$.subscribe(user => { this.user = user; });
+		this.getContrastColor = this.colorsService.getContrastColor;
+	}
 
-  private onWindowFocus = () => {
-    if (!this.loading) {
-       this.resetAndLoad(); 
-    }
-  }
+	ngOnInit(): void {
+		this.loadData();
+		//Refresh table if a lock is release/acquired elsewhere
+		this.lockService.lockUpdate$.subscribe(() => {this.resetAndLoad();});
+	}
+	ngAfterViewInit() {
+		this.initObserver();
+		window.addEventListener('focus', this.onWindowFocus);
+	}
 
-  openDialog(row: Person | null) {
-    if (!this.isInRole([0])) return;
+	ngOnDestroy() {
+		this.observer?.disconnect();
+		window.removeEventListener('focus', this.onWindowFocus);
+	}
 
-    if (!row) {
-        this.launchDialog(null);
-        return;
-    }
+	private onWindowFocus = () => {
+		if (!this.loading) {
+			 this.resetAndLoad(); 
+		}
+	}
 
-    row.team_ids = row.team_objects?.map(team => team.id);
+	//Opens the edit dialog
+	openDialog(row: Person | null) {
+		//Security check
+		if (!this.isInRole([0])) return;
 
-    this.lockService.lock('person', row.id).subscribe({
-        next: () => {
-            this.launchDialog(row);
-        },
-        error: (err: any) => {
-            if (err.lockedBy) {
-                alert(`Cannot edit. Record is currently locked by: ${err.lockedBy}`);
-            } else {
-                console.error('Lock error:', err);
-            }
-        }
-    });
-  }
+		if (!row) {
+				this.launchDialog(null);
+				return;
+		}
 
-  private launchDialog(row: Person | null) {
-    const scrollTop = this.tableContainer?.nativeElement.scrollTop || 0;
-    
-    const dialogRef = this.dialog.open(EditPersonDialog, {width: '75%',minWidth: '800px',data: { row }});
+		//Prepare data
+		row.team_ids = row.team_objects?.map(team => team.id);
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (row) {
-          this.lockService.unlock('person', row.id).subscribe();
-      }
+		//Try to acquire lock
+		this.lockService.lock('person', row.id).subscribe({
+				next: () => {
+						this.launchDialog(row); //lock succesful -> open dialog
+				},
+				error: (err: any) => {
+						//lock failed (conflict)
+						if (err.lockedBy) {
+							alert(`Cannot edit. Record is currently locked by: ${err.lockedBy}`);
+						} 
+						else {
+							console.error('Lock error:', err);
+						}
+				}
+		});
+	}
 
-      if(result) {
-        this.timestamp = Date.now();
-        this.resetAndLoad();
-        setTimeout(() => {
-             if (this.tableContainer && this.tableContainer.nativeElement) {
-                 this.tableContainer.nativeElement.scrollTop = scrollTop;
-             }
-        }, 100); 
-      }
-    });
-  }
+	//Helper to actually open the material dialog
+	private launchDialog(row: Person | null) {
+		const scrollTop = this.tableContainer?.nativeElement.scrollTop || 0;
+		
+		const dialogRef = this.dialog.open(EditPersonDialog, {width: '75%',minWidth: '800px',data: { row }});
 
-  isInRole(roles: number[]) {
-    return this.authService.isInRole(this.user, roles);
-  }
+		dialogRef.afterClosed().subscribe(result => {
+			//always unlock when dialog closes
+			if (row) {
+					this.lockService.unlock('person', row.id).subscribe();
+			}
 
-  private resetAndLoad() {
-    this.persons = [];
-    this.offset = 0;
-    this.allLoaded = false;
-    this.loadData();
-  }
+			if(result) {
+				//if data changed, refresh table
+				this.timestamp = Date.now();
+				this.resetAndLoad();
 
-  private initObserver() {
-    if (!this.loadMore) return;
-    this.observer?.disconnect();
-    this.observer = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting) {
-        this.loadData();
-      }
-    });
-    this.observer.observe(this.loadMore.nativeElement);
-  }
+				//restore scroll position
+				setTimeout(() => {
+						 if (this.tableContainer && this.tableContainer.nativeElement) {
+								 this.tableContainer.nativeElement.scrollTop = scrollTop;
+						 }
+				}, 100); 
+			}
+		});
+	}
 
-  loadData() {
-    if (this.loading || this.allLoaded) return;
+	isInRole(roles: number[]) {
+		return this.authService.isInRole(this.user, roles);
+	}
 
-    this.loading = true;
+	private resetAndLoad() {
+		this.persons = [];
+		this.offset = 0;
+		this.allLoaded = false;
+		this.loadData();
+	}
 
-    this.personsService.getPersons(this._filter, this.limit, this.offset, this.order)
-      .subscribe(response => {
-        this.countsChange.emit({ total: response.total, filtered: response.filtered, order: this.order }); // send changed counters to parent
-        const persons = response.persons;
+	//Detect when the user scrolls to the bottom
+	private initObserver() {
+		if (!this.loadMore) return;
+		this.observer?.disconnect();
+		this.observer = new IntersectionObserver(entries => {
+			if (entries[0].isIntersecting) {
+				this.loadData();
+			}
+		});
+		this.observer.observe(this.loadMore.nativeElement);
+	}
 
-        if (persons.length < this.limit) {
-          this.allLoaded = true;
-        }
+	loadData() {
+		if (this.loading || this.allLoaded) return;
 
-        this.persons = [...this.persons, ...persons];
-        this.offset += this.limit;
-        this.loading = false;
+		this.loading = true;
 
-        this.checkFillViewport();
-      });
-  }
+		this.personsService.getPersons(this._filter, this.limit, this.offset, this.order)
+			.subscribe(response => {
 
-  private checkFillViewport() {
-    requestAnimationFrame(() => {
-      if (!this.loadMore || this.allLoaded) return;
-      const rect = this.loadMore.nativeElement.getBoundingClientRect();
-      if (rect.top < window.innerHeight) {
-        // sentinel still visible - read more records
-        this.loadData();
-      }
-    });
-  }
-  
-  onSortChange(sort: Sort) {
-    const columnNo = parseInt(sort.active);
-    if(columnNo) {
-      switch(sort.direction) {
-        case 'asc':
-          this.order = columnNo;
-          this.resetAndLoad();
-          break;
-        case 'desc':
-          this.order = -columnNo;
-          this.resetAndLoad();
-          break;
-      }
-    }
-  }
+				//Update parent with new total counts
+				this.countsChange.emit({ total: response.total, filtered: response.filtered, order: this.order }); // send changed counters to parent
+				const persons = response.persons;
+
+				//If backend returns fewer items, we reached the end
+				if (persons.length < this.limit) {
+					this.allLoaded = true;
+				}
+
+				//Append new data 
+				this.persons = [...this.persons, ...persons];
+				this.offset += this.limit;
+				this.loading = false;
+
+				this.checkFillViewport();
+			});
+	}
+
+	private checkFillViewport() {
+		requestAnimationFrame(() => {
+			if (!this.loadMore || this.allLoaded) return;
+			const rect = this.loadMore.nativeElement.getBoundingClientRect();
+			if (rect.top < window.innerHeight) {
+				//sentinel still visible - read more records
+				this.loadData();
+			}
+		});
+	}
+	
+	//Handles column sorting events
+	onSortChange(sort: Sort) {
+		const columnNo = parseInt(sort.active);
+		if(columnNo) {
+			switch(sort.direction) {
+				case 'asc':
+					this.order = columnNo;
+					this.resetAndLoad();
+					break;
+				case 'desc':
+					this.order = -columnNo;
+					this.resetAndLoad();
+					break;
+			}
+		}
+	}
 }
 

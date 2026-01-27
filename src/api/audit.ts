@@ -4,12 +4,18 @@ import { requireRole } from '../helpers/auth';
 
 export const auditRouter = Router();
 
+/**
+ * GET /
+ * Retrieves the system audit logs
+ * Access -> Admin
+ */
 auditRouter.get('/', requireRole([0]), async (req, res, next) => {
-  try {
-    const logs = await Audit.getAll(100);
-    res.json(logs);
-  } 
-  catch (error) {
-    next(error);
-  }
+	try {
+		//Fetch the latest 100 actions recorded in the system
+		const logs = await Audit.getAll(100);
+		res.json(logs);
+	} 
+	catch (error) {
+		next(error);
+	}
 });
