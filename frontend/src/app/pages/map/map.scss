@@ -1,0 +1,57 @@
+.container {
+  padding: 20px;
+
+  h1 {
+    margin-bottom: 20px;
+  }
+}
+
+.map-canvas {
+  height: 450px;
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  border: 2px solid #ccc;
+}
+
+.matrix-wrapper {
+  h3 {
+    margin-bottom: 15px;
+  }
+}
+
+.distance-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  border: 1px solid #dee2e6;
+
+  thead {
+    tr {
+      background-color: #eee;
+    }
+    th {
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+  }
+
+  tbody {
+    .team-label {
+      font-weight: bold;
+      background-color: #f9f9f9;
+      padding: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .distance-cell {
+      padding: 8px;
+      border: 1px solid #ccc;
+      background-color: white; 
+      
+      &:hover {
+        background-color: #f0f7ff;
+      }
+    }
+  }
+}

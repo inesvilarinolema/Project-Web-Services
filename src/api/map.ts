@@ -4,10 +4,13 @@ import { db } from '../helpers/db';
 export const mapRouter = Router();
 
 /**
- * GET /
- * Retrieves teams with coordinates and calculates a distance matrix between them
- * Uses USRM public API to get walking distances
+ *GET /
+ *Retrieves teams with coordinates and calculates a distance matrix between them
+ *Uses USRM public API to get walking distances
  */
+
+//Use backend-> security: API urls and logic hidden from client
+//           -> efficiency: server processes coordinate string format required befor sending a clean JSON to frontend
 mapRouter.get('/', async (req, res, next) => {
 	try {
 		//Fetch teams that have valid GPS coordenates
@@ -19,14 +22,10 @@ mapRouter.get('/', async (req, res, next) => {
 		}
 
 		//Format coordinates for OSRM API
-		const coordsString = teams
-			.map((t: any) => `${t.longitude},${t.latitude}`)
-			.join(';');
+		const coordsString = teams.map((t: any) => `${t.longitude},${t.latitude}`).join(';');
 
 		const url = `http://router.project-osrm.org/table/v1/walking/${coordsString}?annotations=distance`;
 
-		//console.log('Consultando OSRM:', url);
-		
 		const response = await fetch(url);
 		if (!response.ok) throw new Error('Error in OSRM API');
 		

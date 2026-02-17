@@ -40,7 +40,7 @@ export class TeamsPage {
         });
         dialogRef.afterClosed().subscribe(result => {
             if(!result) return;
-            this.filterControl.patchValue(result + ' '); // display only record just added
+            this.filterControl.patchValue(result + ' '); //display only record just added
         });
     }
     

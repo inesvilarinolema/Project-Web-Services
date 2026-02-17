@@ -5,72 +5,76 @@ import { WebsocketService } from './websocket';
 import { Team } from '../models/team';
 
 @Injectable({
-  providedIn: 'root'
+	providedIn: 'root'
 })
 export class TeamsService {
-  private apiUrl = '/api/teams';
+	private apiUrl = '/api/teams';
 
-  public reloadMemberShips$ = new Subject<void>();
-  
-  // Subject to notify components to reload the teams list
-  private reloadSubject = new BehaviorSubject<void>(undefined);
-  // Observable that components can subscribe to
-  reload$ = this.reloadSubject.asObservable();
+	public reloadMemberShips$ = new Subject<void>();
+	
+	//Subject to notify components to reload the teams list
+	private reloadSubject = new BehaviorSubject<void>(undefined);
 
-  constructor(private http: HttpClient, private wsService: WebsocketService) {
+	//Observable that components can subscribe to
+	reload$ = this.reloadSubject.asObservable();
 
-    this.wsService.messages$.subscribe(msg => {
+	constructor(private http: HttpClient, private wsService: WebsocketService) {
+		//Listen to global WS mesasges
+		this.wsService.messages$.subscribe(msg => {
 
-      if(msg.type=='membershipsUpdate'){
-        //console.log("Cambio detectado socket -> Avisando...");
-        this.reloadMemberShips$.next();
-      }
-    })
-  }
+			if(msg.type=='membershipsUpdate'){
+				//triger local reload 
+				this.reloadMemberShips$.next();
+			}
+		})
+	}
 
-  getTeams(filter: string = '', order: number = 0): Observable<Team[]> {
-    const params = new HttpParams().set('q', filter).set('order', order);
-    return this.http.get<Team[]>(this.apiUrl, { params });
-  }
+	//fetches the list of teams with server filltering and sorting
+	getTeams(filter: string = '', order: number = 0): Observable<Team[]> {
+		const params = new HttpParams().set('q', filter).set('order', order);
+		return this.http.get<Team[]>(this.apiUrl, { params });
+	}
 
-  newTeam(team: Team, avatarFile: File | undefined): Observable<Team> {
-    return this.http.post<Team>(this.apiUrl, { ...team, has_avatar: !!avatarFile }).pipe(
-      tap((createdTeam: Team) => {
-        this.uploadAvatar(createdTeam.id, avatarFile);
-      })
-    );
-  }
+	//Creates a new team
+	newTeam(team: Team, avatarFile: File | undefined): Observable<Team> {
+		return this.http.post<Team>(this.apiUrl, { ...team, has_avatar: !!avatarFile }).pipe(
+			tap((createdTeam: Team) => {
+				this.uploadAvatar(createdTeam.id, avatarFile);
+			})
+		);
+	}
 
-  modifyTeam(team: Team, avatarFile: File | undefined): Observable<Team> {
-    this.uploadAvatar(team.id, avatarFile);
-    console.log(team);
-    return this.http.put<Team>(this.apiUrl, { ...team, has_avatar: !!avatarFile });
-  }
+	//Update an existing team
+	modifyTeam(team: Team, avatarFile: File | undefined): Observable<Team> {
+		this.uploadAvatar(team.id, avatarFile);
+		console.log(team);
+		return this.http.put<Team>(this.apiUrl, { ...team, has_avatar: !!avatarFile });
+	}
 
-  deleteTeam(id: number): Observable<Team> {
-    const params = new HttpParams().set('id', id);
-    return this.http.delete<Team>(this.apiUrl, { params });
-  }
+	deleteTeam(id: number): Observable<Team> {
+		const params = new HttpParams().set('id', id);
+		return this.http.delete<Team>(this.apiUrl, { params });
+	}
 
-  notifyReload() {
-    this.reloadSubject.next();
-  }
+	notifyReload() {
+		this.reloadSubject.next();
+	}
 
-  uploadAvatar(id: number, file: File | undefined) {
-    const formData = new FormData();
-    if (file) {
-      formData.append('file', file.name ? file : new Blob([file], { type: file.type }), file.name);
-    }
-    formData.append('path', 'avatar');
-    formData.append('name', id.toString() + '.png');
+	uploadAvatar(id: number, file: File | undefined) {
+		const formData = new FormData();
+		if (file) {
+			formData.append('file', file.name ? file : new Blob([file], { type: file.type }), file.name);
+		}
+		formData.append('path', 'avatar');
+		formData.append('name', id.toString() + '.png');
 
-    fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-    });
-  }
+		fetch('/api/upload', {
+				method: 'POST',
+				body: formData,
+		});
+	}
 
-  getMembers(teamId: number) {
-    return this.http.get<any[]>(`/api/teams/${teamId}/members`);
-  }
+	getMembers(teamId: number) {
+		return this.http.get<any[]>(`/api/teams/${teamId}/members`);
+	}
 }
